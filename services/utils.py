@@ -5,6 +5,7 @@ import requests
 import pickle
 from typing import List, Optional, Union
 import numpy as np
+import cv2
 
 def verify_folder(root):
     if '.' in os.path.basename(root):
@@ -37,3 +38,24 @@ def get_file_hash(file_path, algorithm='sha256'):
     except FileNotFoundError:
         print(f"文件 {file_path} 未找到。")
         return None
+
+from PIL import Image
+import base64
+from io import BytesIO
+def image_to_base64_jpg(image_path):
+    try:
+        # 打开图像文件
+        with Image.open(image_path) as img:
+            img = img.convert('RGB')
+            # 创建一个内存缓冲区
+            buffer = BytesIO()
+            # 将图像保存为JPEG格式到缓冲区
+            img.save(buffer, format="JPEG")
+            # 获取缓冲区中的二进制数据
+            img_bytes = buffer.getvalue()
+            # 将二进制数据编码为Base64字符串
+            base64_encoded = base64.b64encode(img_bytes).decode('utf-8')
+            img.close()
+        return base64_encoded
+    except Exception as e:
+        raise (f"处理图像时出现错误: {e}")

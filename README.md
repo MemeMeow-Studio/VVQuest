@@ -23,7 +23,7 @@ pip install -r requirements.txt
 
 4. 运行项目
 ```bash
-python -m streamlit run streamlit_app.py
+python -m streamlit run app.py
 ```
 
 ## 添加额外图片
@@ -37,6 +37,10 @@ pic_example:
     replacement: ""
   type: "名称"
 ```
+
+## 图片打标 (WIP)
+
+选择 `label images` 页面，选择图片文件夹，点击 `使用VLM生成描述` ，选择需要的描述后重命名文件即可。
 
 ## Demo
 
