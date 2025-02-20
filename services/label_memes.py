@@ -20,7 +20,7 @@ class LabelMemes():
         self.endpoint = "https://api.siliconflow.com/v1/embeddings"
         self.cache = {}
         self._load_cache()
-        self.use_cache = False 
+        
         self.preprocess_config = {
             'max_size': 1024,        # 最大边长
             'quality': 5,           # png压缩质量
@@ -98,8 +98,10 @@ class LabelMemes():
         model_name = config.models.vlm_models['Qwen2-VL-72B-Instruct'].name
         if not model_name in self.cache.keys():
             self.cache[model_name] = {}
+
         if get_file_hash(image_path) in self.cache[model_name] and self.use_cache:
             return self._analyze_result_text(self.cache[model_name][get_file_hash(image_path)]['description'])
+
 
         # 读取图像
         img = cv2.imread(image_path)
