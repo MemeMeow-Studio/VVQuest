@@ -3,6 +3,8 @@ import base64
 from services.utils import *
 from config.settings import config
 import cv2
+from PIL import Image, ImageEnhance
+import io
 
 PROMOTE = """你是一位表情包分类专家。请分析这个表情包，要求：
 
@@ -18,6 +20,12 @@ class LabelMemes():
         self.endpoint = "https://api.siliconflow.com/v1/embeddings"
         self.cache = {}
         self._load_cache()
+        self.preprocess_config = {
+            'max_size': 1024,        # 最大边长
+            'quality': 5,           # png压缩质量
+            'sharpen_factor': 1.5,   # 锐化强度
+            'contrast_factor': 1.2   # 对比度增强
+        }
 
     def _load_cache(self):
         cache_file = config.get_label_images_cache_file()
@@ -31,6 +39,40 @@ class LabelMemes():
         with open(cache_file, 'wb') as f:
             pickle.dump(self.cache, f)
 
+    def _resize_image(self, img):
+        """尺寸调整"""
+        h, w = img.shape[:2]
+        max_size = self.preprocess_config['max_size']
+        
+        if max(h, w) > max_size:
+            scale = max_size / max(h, w)
+            new_w = int(w * scale)
+            new_h = int(h * scale)
+            return cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_AREA)
+        return img
+    
+    def _enhance_image(self, img):
+        """图像增强"""
+        # 转换为PIL格式进行处理
+        pil_img = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+        
+        # 锐化处理
+        enhancer = ImageEnhance.Sharpness(pil_img)
+        pil_img = enhancer.enhance(self.preprocess_config['sharpen_factor'])
+        
+        # 对比度增强
+        enhancer = ImageEnhance.Contrast(pil_img)
+        pil_img = enhancer.enhance(self.preprocess_config['contrast_factor'])
+        
+        return cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+    
+
+    def _compress_image(self, img):
+        """格式转换与压缩"""
+        encode_param = [int(cv2.IMWRITE_PNG_COMPRESSION), self.preprocess_config['quality']]
+        _, img_encoded = cv2.imencode('.png', img, encode_param)
+        return img_encoded
+
     def label_image(self, image_path):
         # 检查缓存
         model_name = config.models.vlm_models['Qwen2-VL-72B-Instruct'].name
@@ -39,22 +81,19 @@ class LabelMemes():
         if get_file_hash(image_path) in self.cache[model_name]:
             return self.cache[model_name][get_file_hash(image_path)]['description']
 
+        # 读取图像
+        img = cv2.imread(image_path)
+        
+        # 尺寸调整（保持宽高比）
+        img = self._resize_image(img)
+        
+        # 图像增强
+        img = self._enhance_image(img)
+        
+        # 格式转换与压缩
+        img_encoded = self._compress_image(img)
 
-        # 以二进制模式读取图片
-        with open(image_path, 'rb') as f:
-            img_data = f.read()
-
-        # 将读取的数据转换为numpy数组
-        img_array = np.frombuffer(img_data, np.uint8)
-
-        # 解码数组得到图像
-        image = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
-
-        # 将图像编码为 JPEG 格式
-        _, img_encoded = cv2.imencode(".png", image)
         img_str = base64.b64encode(img_encoded).decode("utf-8")
-
-        import requests
 
         import requests
 
@@ -78,7 +117,7 @@ class LabelMemes():
                         {
                             "type": "image_url",
                             "image_url": {
-                                "url": f'data:image/jpg;base64,{img_str}',
+                                "url": f'data:image/png;base64,{img_str}',
                                 "detail": "high"
                             }
                         }

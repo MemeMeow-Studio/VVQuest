@@ -8,3 +8,4 @@ FlagEmbedding
 confz
 opencv-python
 pyyaml
+pillow
