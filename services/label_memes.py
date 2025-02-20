@@ -20,6 +20,7 @@ class LabelMemes():
         self.endpoint = "https://api.siliconflow.com/v1/embeddings"
         self.cache = {}
         self._load_cache()
+        self.use_cache = False 
         self.preprocess_config = {
             'max_size': 1024,        # 最大边长
             'quality': 5,           # png压缩质量
@@ -40,6 +41,7 @@ class LabelMemes():
             pickle.dump(self.cache, f)
 
     def _analyze_result_text(self, text:str):
+        """分析并格式化模型返回的文本"""
         if not '**表情包含义**' in text or not '**表情包主体**' in text or not '**表情包使用场景**' in text:
             raise Exception(f'analyze result text error: {text}; 模型太蠢,换个模型或者重试')
         desc = text.split('**表情包含义**')[-1]
@@ -91,31 +93,13 @@ class LabelMemes():
         _, img_encoded = cv2.imencode('.png', img, encode_param)
         return img_encoded
 
-    def _analyze_result_text(self, text:str):
-        if not '**表情包含义**' in text or not '**表情包主体**' in text or not '**表情包使用场景**' in text:
-            raise Exception(f'analyze result text error: {text}; 模型太蠢,换个模型或者重试')
-        desc = text.split('**表情包含义**')[-1]
-        character = desc.split('**表情包主体**')[-1]
-        usage = character.split('**表情包使用场景**')[-1]
-        def clean_some_characters(x, l):
-            for i in l:
-                x = x.replace(i, '')
-            return x
-        desc = desc.replace(character, '')
-        character = character.replace(usage, '')
-        laji = ['表情包主体', '表情包使用场景', ':', '**(', ')；**', ');**', '**', ');', ')', '；', '(', ')', '\n', '：']
-        desc = clean_some_characters(desc, laji).replace('/', ' ').replace('\\', ' ')
-        character = clean_some_characters(character, laji).replace('/', ' ').replace('\\', ' ')
-        usage = clean_some_characters(usage, laji).replace('/', ' ').replace('\\', ' ')
-        return desc, character, usage
-
     def label_image(self, image_path):
         # 检查缓存
         model_name = config.models.vlm_models['Qwen2-VL-72B-Instruct'].name
         if not model_name in self.cache.keys():
             self.cache[model_name] = {}
-        if get_file_hash(image_path) in self.cache[model_name]:
-            return self.cache[model_name][get_file_hash(image_path)]['description']
+        if get_file_hash(image_path) in self.cache[model_name] and self.use_cache:
+            return self._analyze_result_text(self.cache[model_name][get_file_hash(image_path)]['description'])
 
         # 读取图像
         img = cv2.imread(image_path)
@@ -130,31 +114,13 @@ class LabelMemes():
         img_encoded = self._compress_image(img)
 
         img_str = base64.b64encode(img_encoded).decode("utf-8")
-        if get_file_hash(image_path) in self.cache[model_name] and self.use_cache:
-            return self._analyze_result_text(self.cache[model_name][get_file_hash(image_path)]['description'])
-
-        # 以二进制模式读取图片
-        # with open(image_path, 'rb') as f:
-        #     img_data = f.read()
-        #
-        # # 将读取的数据转换为numpy数组
-        # img_array = np.frombuffer(img_data, np.uint8)
-        #
-        # # 解码数组得到图像
-        # image = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
-        #
-        # # 将图像编码为 JPEG 格式
-        # _, img_encoded = cv2.imencode(".png", image)
-        img_str = image_to_base64_jpg(image_path)#.decode("utf-8")
-
-        import requests
 
         import requests
 
         url = "https://api.siliconflow.cn/v1/chat/completions"
 
         payload = {
-            "model": config.models.vlm_models['Qwen2-VL-72B-Instruct'].name, # Qwen2-VL-72B-Instruct
+            "model": config.models.vlm_models['Qwen2-VL-72B-Instruct'].name,
             "messages": [
                 {
                     "role": "system",
@@ -213,22 +179,22 @@ class LabelMemes():
             response = requests.request("POST", url, json=payload, headers=headers)
             response.raise_for_status()  # 抛出详细的HTTP错误
             description = response.json()['choices'][0]['message']['content']
-            self._analyze_result_text(description)
+            
+            # 缓存结果
+            self.cache[model_name][get_file_hash(image_path)] = {
+                'description': description,
+                'raw': response.json()
+            }
+            self._save_cache()
+            
+            return self._analyze_result_text(description)
+            
         except requests.exceptions.RequestException as e:
             if hasattr(e.response, 'status_code') and e.response.status_code == 400:
                 # 尝试打印详细的错误信息
                 error_msg = e.response.json() if e.response.text else "未知错误"
                 print(f"API请求参数错误: {str(error_msg).replace(img_str, 'IMGDATA')}")
             raise RuntimeError(f"API请求失败: {str(e)}\n请求参数: {str(payload).replace(img_str, 'IMGDATA')}")
-
-        # 缓存结果
-        self.cache[model_name][get_file_hash(image_path)] = {
-            'description': description,
-            'raw': response.json()
-        }
-        self._save_cache()
-
-        return self._analyze_result_text(description)
 
 if __name__ == "__main__":
     lm = LabelMemes()
