@@ -15,8 +15,13 @@ class EmbeddingModelConfig(BaseConfig):
     name: str
     performance: str
 
+class VlmModelConfig(BaseConfig):
+    name: str
+    performance: str
+
 class ModelsConfig(BaseConfig):
     embedding_models: Dict[str, EmbeddingModelConfig]
+    vlm_models: Dict[str, VlmModelConfig]
     default_model: str
 
 class PathsConfig(BaseConfig):
@@ -24,6 +29,7 @@ class PathsConfig(BaseConfig):
     cache_file: str
     models_dir: str
     api_embeddings_cache_file: str
+    label_images_cache_file: str
 
 class ApiConfig(BaseConfig):
     silicon_api_key: Optional[str] = None
@@ -70,6 +76,10 @@ class Config(BaseConfig):
     def get_abs_api_cache_file(self) -> str:
         """获取缓存文件的绝对路径"""
         return os.path.join(self.base_dir, self.paths.api_embeddings_cache_file)
+
+    def get_label_images_cache_file(self) -> str:
+        """获取缓存文件的绝对路径"""
+        return os.path.join(self.base_dir,self.paths.label_images_cache_file)
 
     def reload(self) -> None:
         """重新加载配置文件"""

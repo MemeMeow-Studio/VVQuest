@@ -6,3 +6,5 @@ streamlit
 huggingface_hub
 FlagEmbedding
 confz
+opencv-python
+pyyaml
