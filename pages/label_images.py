@@ -13,7 +13,19 @@ from config.settings import config, reload_config
 from pages.utils import *
 from services.label_memes import LabelMemes
 
+IMAGE_DIRS_PATH = 'data/image_dirs'
+if not os.path.exists(IMAGE_DIRS_PATH):
+    os.makedirs(IMAGE_DIRS_PATH)
 
+# 获取image_dirs下的所有文件夹
+def get_image_dirs():
+    dirs = ['data/images']  # 默认包含原始图片目录
+    if os.path.exists(IMAGE_DIRS_PATH):
+        for item in os.listdir(IMAGE_DIRS_PATH):
+            item_path = os.path.join(IMAGE_DIRS_PATH, item)
+            if os.path.isdir(item_path):
+                dirs.append(item_path)
+    return dirs
 
 st.set_page_config(
     page_title="LabelImages",
@@ -23,16 +35,18 @@ st.set_page_config(
 )
 
 if 'image_folder_name' not in st.session_state:
-    st.session_state.image_folder_name = 'Please Select a Folder'
+    st.session_state.image_folder_name = 'data/images'  # 默认使用原始图片目录
 if 'image_index' not in st.session_state:
     st.session_state.image_index = 0
+if 'all_images_path' not in st.session_state:
+    st.session_state.all_images_path = get_all_file_paths('data/images')  # 初始化图片列表
 if 'label_meme_obj' not in st.session_state:
     st.session_state.label_meme_obj = LabelMemes()
 if 'new_file_name' not in st.session_state:
     st.session_state.new_file_name = ''
 if 'can_add_vlm_result_to_filename' not in st.session_state:
     st.session_state.can_add_vlm_result_to_filename = False
-if 'auto_generate_labels' not in st.session_state:
+if 'auto_generate_labels' not in st.session_state:  
     st.session_state.auto_generate_labels = False
 if 'result_folder_name' not in st.session_state:
     st.session_state.result_folder_name = ''
@@ -46,7 +60,14 @@ def onchange_folder_name():
 
 
 with st.sidebar:
-    st.text_input('原图文件夹', on_change=onchange_folder_name, key='image_folder_name')
+    # 使用selectbox替代text_input
+    st.selectbox(
+        '选择图片文件夹',
+        options=get_image_dirs(),
+        on_change=onchange_folder_name,
+        key='image_folder_name',
+        help='可以在data/image_dirs下创建新的文件夹来保存图片。'
+    )
     # st.text_input('生成结果文件夹', key='result_folder_name')
 
 
