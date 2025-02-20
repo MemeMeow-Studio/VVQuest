@@ -91,6 +91,24 @@ class LabelMemes():
         _, img_encoded = cv2.imencode('.png', img, encode_param)
         return img_encoded
 
+    def _analyze_result_text(self, text:str):
+        if not '**表情包含义**' in text or not '**表情包主体**' in text or not '**表情包使用场景**' in text:
+            raise Exception(f'analyze result text error: {text}; 模型太蠢,换个模型或者重试')
+        desc = text.split('**表情包含义**')[-1]
+        character = desc.split('**表情包主体**')[-1]
+        usage = character.split('**表情包使用场景**')[-1]
+        def clean_some_characters(x, l):
+            for i in l:
+                x = x.replace(i, '')
+            return x
+        desc = desc.replace(character, '')
+        character = character.replace(usage, '')
+        laji = ['表情包主体', '表情包使用场景', ':', '**(', ')；**', ');**', '**', ');', ')', '；', '(', ')', '\n', '：']
+        desc = clean_some_characters(desc, laji).replace('/', ' ').replace('\\', ' ')
+        character = clean_some_characters(character, laji).replace('/', ' ').replace('\\', ' ')
+        usage = clean_some_characters(usage, laji).replace('/', ' ').replace('\\', ' ')
+        return desc, character, usage
+
     def label_image(self, image_path):
         # 检查缓存
         model_name = config.models.vlm_models['Qwen2-VL-72B-Instruct'].name
