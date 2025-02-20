@@ -19,6 +19,7 @@ class LabelMemes():
         self.api_key = config.api.silicon_api_key
         self.endpoint = "https://api.siliconflow.com/v1/embeddings"
         self.cache = {}
+        self.use_cache = False
         self._load_cache()
         
         self.preprocess_config = {
