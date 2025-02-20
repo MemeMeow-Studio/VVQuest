@@ -9,6 +9,7 @@ import numpy as np
 from FlagEmbedding import BGEM3FlagModel
 from huggingface_hub import snapshot_download
 from tqdm import tqdm
+from services.utils import verify_folder
 
 class EmbeddingService:
     def __init__(self):
@@ -25,10 +26,12 @@ class EmbeddingService:
         """获取嵌入缓存"""
         if self.mode == 'api':
             cache_file = config.get_abs_api_cache_file()
+            verify_folder(cache_file)
         else:
             if not self.selected_model:
                 return
             cache_file = config.get_absolute_cache_file().replace('.pkl', f'_{self.selected_model}.pkl')
+            verify_folder(cache_file)
             
         if os.path.exists(cache_file):
             with open(cache_file, 'rb') as f:

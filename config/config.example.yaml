@@ -14,8 +14,16 @@ models:
     bge-small-zh-v1.5:
       name: BAAI/bge-small-zh-v1.5
       performance: low
+  vlm_models:
+    Qwen2-VL-72B-Instruct:
+      name: Qwen/Qwen2-VL-72B-Instruct
+      performance: high
+    deepseek-vl2:
+      name: deepseek-ai/deepseek-vl2
+      performance: low
 paths:
   api_embeddings_cache_file: data/api_embeddings_cache.pkl
+  label_images_cache_file: data/label_images_cache.pkl
   cache_file: data/embeddings.pkl
   image_dirs:
     default:
