@@ -87,7 +87,7 @@ class LabelMemes():
             ]
         }
         headers = {
-            "Authorization": "Bearer sk-whqbjuigmaufcynzrcncwlqdpqrdjytysjgbwkrtiyhgkcnq",
+            "Authorization": f"Bearer {config.api.silicon_api_key}",
             "Content-Type": "application/json"
         }
 
@@ -138,4 +138,4 @@ class LabelMemes():
 
 if __name__ == "__main__":
     lm = LabelMemes()
-    print(lm.label_image(r"D:\ProgramData\python\VVQuest\data\images\不值得同情的.png"))
+    print(lm.label_image(r".\data\images\不值得同情的.png"))
