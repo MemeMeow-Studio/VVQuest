@@ -36,8 +36,8 @@ if 'auto_generate_labels' not in st.session_state:
     st.session_state.auto_generate_labels = False
 if 'result_folder_name' not in st.session_state:
     st.session_state.result_folder_name = ''
-    if 'image_folder_name' in st.session_state:
-        st.session_state.result_folder_name = st.session_state.image_folder_name
+if st.session_state.result_folder_name == '' and 'image_folder_name' in st.session_state:
+    st.session_state.result_folder_name = st.session_state.image_folder_name
 
 def onchange_folder_name():
     st.session_state.image_index = 0
@@ -47,7 +47,7 @@ def onchange_folder_name():
 
 with st.sidebar:
     st.text_input('原图文件夹', on_change=onchange_folder_name, key='image_folder_name')
-    st.text_input('生成结果文件夹', on_change=onchange_folder_name, key='result_folder_name')
+    # st.text_input('生成结果文件夹', key='result_folder_name')
 
 
 
@@ -105,7 +105,8 @@ if os.path.exists(st.session_state.image_folder_name):
 
     def onclick_rename_file():
         original_path = st.session_state.all_images_path[st.session_state.image_index]
-        new_path = os.path.join(st.session_state.result_folder_name, st.session_state.new_file_name+os.path.splitext(os.path.basename(original_path))[1])
+        # new_path = os.path.join(st.session_state.result_folder_name, st.session_state.new_file_name+os.path.splitext(os.path.basename(original_path))[1])
+        new_path = original_path.replace(os.path.splitext(os.path.basename(original_path))[0], st.session_state.new_file_name)
         try:
             os.rename(original_path, new_path)
         except Exception as e:
@@ -125,8 +126,8 @@ if os.path.exists(st.session_state.image_folder_name):
         st.session_state.can_add_vlm_result_to_filename = False
         st.session_state.new_file_name = ''
     with col1:
-        st.button('Previous', on_click=onc1)
+        st.button('上一张', on_click=onc1)
 
     with col2:
-        st.button('Next', on_click=onc2)
+        st.button('下一张', on_click=onc2)
 
