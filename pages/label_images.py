@@ -52,6 +52,8 @@ if 'result_folder_name' not in st.session_state:
     st.session_state.result_folder_name = ''
 if st.session_state.result_folder_name == '' and 'image_folder_name' in st.session_state:
     st.session_state.result_folder_name = st.session_state.image_folder_name
+if st.session_state.result_folder_name == '' and 'image_folder_name' in st.session_state:
+    st.session_state.result_folder_name = st.session_state.image_folder_name
 
 def onchange_folder_name():
     st.session_state.image_index = 0
