@@ -59,3 +59,15 @@ def image_to_base64_jpg(image_path):
         return base64_encoded
     except Exception as e:
         raise (f"处理图像时出现错误: {e}")
+
+def load_image(image_path) -> np.ndarray:
+    # opencv不能打开含有中文路径的图片和gif图，一定要用PIL
+    try:
+        # 打开图像文件
+        with Image.open(image_path) as img:
+            img = img.convert('RGB')
+            npimg = np.array(img)
+            img.close()
+        return npimg
+    except Exception as e:
+        raise (f"处理图像时出现错误: {e}")
