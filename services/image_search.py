@@ -216,6 +216,7 @@ class ImageSearch:
             return []
         
         similarities = []
+        exists_imgs_path = []
         for img in self.image_data:
             if 'filepath' not in img and config.misc.adapt_for_old_version:
                 img['filepath'] = os.path.join(config.get_absolute_image_dirs()[0], img["filename"])
@@ -226,5 +227,14 @@ class ImageSearch:
             return []
             
         # 按相似度降序排序并返回前top_k个结果
-        sorted_items = sorted(similarities, key=lambda x: x[1], reverse=True)[:top_k]
-        return [item[0] for item in sorted_items] 
+        sorted_items = sorted(similarities, key=lambda x: x[1], reverse=True)
+        return_list = []
+        count = 0
+        for i in sorted_items:
+            if count >= top_k:
+                break
+            if i[0] not in exists_imgs_path:
+                return_list.append(i[0])
+                exists_imgs_path.append(i[0])
+                count += 1
+        return [item[0] for item in return_list]
