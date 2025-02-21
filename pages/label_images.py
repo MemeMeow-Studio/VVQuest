@@ -85,6 +85,7 @@ def pregenerate_label(img_path, label_obj:LabelMemes, result_dict):
     for i in range(5):
         try:
             result_dict[img_path] = list(label_obj.label_image(img_path))
+            return True
         except Exception as e:
             print(f'pregenerate_label failed: {str(e)}')
 
