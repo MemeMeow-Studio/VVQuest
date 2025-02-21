@@ -72,3 +72,4 @@ def load_image(image_path) -> np.ndarray:
         return npimg
     except Exception as e:
         raise (f"处理图像时出现错误: {e}")
+

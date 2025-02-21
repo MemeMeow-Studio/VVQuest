@@ -101,6 +101,10 @@ with st.sidebar:
     st.checkbox('AI预生成',
                 key='ai_pre_generate',
                 help='预生成接下来2张图片的描述，加速操作')
+
+    st.checkbox('点击下一张图片时自动重命名',
+                key='rename_when_click_next',
+                value=True)
     # st.text_input('生成结果文件夹', key='result_folder_name')
 
     # """暂未实现，预生成的性能足够用，不太需要"""
@@ -116,6 +120,8 @@ if os.path.exists(st.session_state.image_folder_name):
     st.write(img_path)
     with Image.open(img_path) as img:
         img_obj = img.copy()
+    img_obj = np.array(img_obj)
+    img_obj = resize_image(img_obj, 256)
     st.image(img_obj)
 
     col3, col4, col5 = st.columns([1, 1, 1])
@@ -176,6 +182,7 @@ if os.path.exists(st.session_state.image_folder_name):
             st.error(f"重命名文件失败: {str(e)}")
             return False
         st.session_state.all_images_path[st.session_state.all_images_path.index(original_path)] = new_path
+        st.success(f"文件已重命名为: {new_path}")
         return True
     st.button('重命名文件', on_click=onclick_rename_file)
 
@@ -185,6 +192,10 @@ if os.path.exists(st.session_state.image_folder_name):
         st.session_state.can_add_vlm_result_to_filename = False
         st.session_state.new_file_name = ''
     def onc2():
+        if st.session_state.rename_when_click_next:
+            if os.path.exists(st.session_state.all_images_path[st.session_state.image_index]) and \
+                st.session_state.new_file_name != '':
+                onclick_rename_file()
         st.session_state.image_index += 1
         st.session_state.can_add_vlm_result_to_filename = False
         st.session_state.new_file_name = ''
