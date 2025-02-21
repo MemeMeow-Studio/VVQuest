@@ -152,23 +152,30 @@ class ImageSearch:
                             break
 
                     if full_filename:
-                        if filepath in generated_files:
-                            # 使用已经存在的embedding
-                            embedding = self.image_data[generated_files.index(filepath)]['embedding']
-                            embedding_name = self.image_data[generated_files.index(filepath)]['embedding_name']
-                        else:
-                            embedding_name = filename
-                            if replace_patterns_regex is not None:
-                                for pattern, replacement in replace_patterns_regex.items():
-                                    embedding_name = re.sub(pattern, replacement, embedding_name)
+                        # if filepath in generated_files:
+                        #     # 使用已经存在的embedding
+                        #     embedding = self.image_data[generated_files.index(filepath)]['embedding']
+                        #     embedding_name = self.image_data[generated_files.index(filepath)]['embedding_name']
+                        # else:
+
+                        # 在service那边已经有缓存了，这边直接开干，同时也是为了适配一个图片多个embedding。
+                        raw_embedding_name = filename
+                        if replace_patterns_regex is not None:
+                            for pattern, replacement in replace_patterns_regex.items():
+                                raw_embedding_name = re.sub(pattern, replacement, raw_embedding_name)
+                        embedding_names = raw_embedding_name.split('-')
+                        for embedding_name in embedding_names:
+                            if embedding_name == '':
+                                print()
+                                continue
                             embedding = self.embedding_service.get_embedding(embedding_name)
-                        embeddings.append({
-                            "filename": full_filename,
-                            "filepath": filepath,
-                            "embedding": embedding,
-                            "embedding_name": embedding_name,
-                            "type": image_type if image_type is not None else 'Normal'
-                        })
+                            embeddings.append({
+                                "filename": full_filename,
+                                "filepath": filepath,
+                                "embedding": embedding,
+                                "embedding_name": embedding_name,
+                                "type": image_type if image_type is not None else 'Normal'
+                            })
 
                     progress_bar.progress((index + 1) / length, text=f"处理图片 {index + 1}/{length}")
 

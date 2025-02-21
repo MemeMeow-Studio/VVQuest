@@ -42,6 +42,8 @@ pic_example:
 
 选择 `label images` 页面，选择图片文件夹，点击 `使用VLM生成描述` ，选择需要的描述后重命名文件即可。
 
+程序使用文件名生成embedding用于检索。如果你希望给一个图片多个embedding，你可以在文件名中使用`-`分隔。
+
 ## Demo
 
 <img width="256" alt="3bfb772e239f3437a13d46252aab1e1d" src="https://github.com/user-attachments/assets/d7e02f8f-205d-42ef-9c80-49f98aff64a6" />

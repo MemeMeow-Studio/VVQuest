@@ -1,7 +1,7 @@
 import os
 
 import cv2
-
+from config.settings import config
 
 def get_all_file_paths(folder_path):
     # 用于存储所有文件的绝对路径
@@ -25,3 +25,19 @@ def resize_image(img, max_size=1024):
         new_h = int(h * scale)
         return cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_AREA)
     return img
+
+IMAGE_DIRS_PATH = 'data/image_dirs'
+if not os.path.exists(IMAGE_DIRS_PATH):
+    os.makedirs(IMAGE_DIRS_PATH)
+
+# 获取image_dirs下的所有文件夹
+def get_image_dirs():
+    dirs = ['data/images']  # 默认包含原始图片目录
+    if os.path.exists(IMAGE_DIRS_PATH):
+        for item in os.listdir(IMAGE_DIRS_PATH):
+            item_path = os.path.join(IMAGE_DIRS_PATH, item)
+            if os.path.isdir(item_path):
+                dirs.append(item_path)
+    for i in config.paths.image_dirs.keys():
+        dirs.append(i)
+    return dirs

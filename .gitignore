@@ -6,3 +6,4 @@
 .env.*
 !.env.example
 config/config.yaml
+cache/
