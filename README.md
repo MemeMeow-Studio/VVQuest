@@ -52,6 +52,8 @@ pic_example:
 
 可以启用`使用VLM自动生成文件名`，程序会使用VLM为每张图片生成文件名。
 
+每次上传完成后，需要叉掉所有已上传的文件或者刷新页面，否则会重复保存。
+
 ## Demo
 
 <img width="256" alt="3bfb772e239f3437a13d46252aab1e1d" src="https://github.com/user-attachments/assets/d7e02f8f-205d-42ef-9c80-49f98aff64a6" />

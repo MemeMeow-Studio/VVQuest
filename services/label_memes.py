@@ -63,7 +63,7 @@ class LabelMemes():
         texts = clean_some_characters(clean_some_characters(texts, laji), seperator, ' ')
         if '无文字' in texts:
             texts = ''
-        for i in [desc, character, usage, texts]:
+        for i in [desc, character, usage]:
             if len(i) > 20:
                 raise Exception(f'analyze result text error: {text}: \n 模型太蠢（字数过多）， 换个模型或者重试')
         return desc, character, usage, texts
