@@ -237,4 +237,4 @@ class ImageSearch:
                 return_list.append(i[0])
                 exists_imgs_path.append(i[0])
                 count += 1
-        return [item[0] for item in return_list]
+        return return_list
