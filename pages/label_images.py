@@ -103,7 +103,7 @@ with st.sidebar:
                 help='预生成接下来2张图片的描述，加速操作')
     # st.text_input('生成结果文件夹', key='result_folder_name')
 
-    """暂未实现，预生成的性能足够用，不太需要"""
+    # """暂未实现，预生成的性能足够用，不太需要"""
     # st.button('开始/启动自动生成',on_click=onclick_start_stop_auto_generate)
 
 

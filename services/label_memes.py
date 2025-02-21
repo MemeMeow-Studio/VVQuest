@@ -113,7 +113,7 @@ class LabelMemes():
         
         # 图像增强
         img = self._enhance_image(img)
-        
+
         # 格式转换与压缩
         img_encoded = self._compress_image(img)
 

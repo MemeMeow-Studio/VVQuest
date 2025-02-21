@@ -68,6 +68,7 @@ def load_image(image_path) -> np.ndarray:
             img = img.convert('RGB')
             npimg = np.array(img)
             img.close()
+            npimg = cv2.cvtColor(npimg, cv2.COLOR_RGB2BGR)
         return npimg
     except Exception as e:
         raise (f"处理图像时出现错误: {e}")
