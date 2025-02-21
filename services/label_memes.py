@@ -54,7 +54,7 @@ class LabelMemes():
             return x
         desc = desc.replace(character, '')
         character = character.replace(usage, '')
-        laji = ['表情包主体', '表情包使用场景', ':', '**(', ')；**', ');**', '**', ');', ')', '；', '(', ')', '\n', '：']
+        laji = ['表情包主体', '表情包使用场景', ':', '**(', ')；**', ');**', '**', ');', ')', '；', '(', ')', '\n', '：', '（', '）']
         desc = clean_some_characters(desc, laji).replace('/', ' ').replace('\\', ' ')
         character = clean_some_characters(character, laji).replace('/', ' ').replace('\\', ' ')
         usage = clean_some_characters(usage, laji).replace('/', ' ').replace('\\', ' ')
@@ -105,14 +105,15 @@ class LabelMemes():
 
 
         # 读取图像
-        img = cv2.imread(image_path)
-        
+        # img = cv2.imread(image_path) # 不能使用这个，无法读取部分图片
+        img = load_image(image_path)
+
         # 尺寸调整（保持宽高比）
         img = self._resize_image(img)
         
         # 图像增强
         img = self._enhance_image(img)
-        
+
         # 格式转换与压缩
         img_encoded = self._compress_image(img)
 
