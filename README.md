@@ -44,6 +44,14 @@ pic_example:
 
 程序使用文件名生成embedding用于检索。如果你希望给一个图片多个embedding，你可以在文件名中使用`-`分隔。
 
+## 上传图片 (WIP)
+
+选择 `images manager` 页面，点击`添加表情包`按钮，上传图片即可。
+
+可以选择多张表情包。
+
+可以启用`使用VLM自动生成文件名`，程序会使用VLM为每张图片生成文件名。
+
 ## Demo
 
 <img width="256" alt="3bfb772e239f3437a13d46252aab1e1d" src="https://github.com/user-attachments/assets/d7e02f8f-205d-42ef-9c80-49f98aff64a6" />
