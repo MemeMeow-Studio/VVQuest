@@ -9,9 +9,7 @@ import io
 PROMOTE = """你是一位表情包分类专家。请分析这个表情包，要求：
 
 1. 简要分析表情包的内容，含义，主体和可能的使用场景；如果表情包有文字，你应该仔细分析考虑，因为表情包的文字通常有幽默感而难以理解；
-2. 按格式要求输出表情包的文本描述，格式如下： **表情包含义**:(几个关键词概括表情包；如果表情包有文字，你要写出); **表情包主体**:(提取表情包的主角); **表情包使用场景**:(几个关键词描述表情包可能的使用场景)
-
-
+2. 按格式要求输出表情包的文本描述，格式如下： **表情包含义**:(几个关键词概括表情包；); **表情包主体**:(几个关键词描述表情包的主角); **表情包使用场景**:(几个关键词描述表情包可能的使用场景);**表情包文字**:(提取表情包中的所有文字；如果没有文字，输出"无文字")
 """
 
 class LabelMemes():
@@ -43,22 +41,32 @@ class LabelMemes():
 
     def _analyze_result_text(self, text:str):
         """分析并格式化模型返回的文本"""
-        if not '**表情包含义**' in text or not '**表情包主体**' in text or not '**表情包使用场景**' in text:
-            raise Exception(f'analyze result text error: {text}; 模型太蠢,换个模型或者重试')
+        if not '**表情包含义**' in text or not '**表情包主体**' in text or not '**表情包使用场景**' in text or not '**表情包文字**' in text:
+            raise Exception(f'analyze result text error: {text}: \n 模型太蠢（输出不符合要求）,换个模型或者重试')
         desc = text.split('**表情包含义**')[-1]
         character = desc.split('**表情包主体**')[-1]
         usage = character.split('**表情包使用场景**')[-1]
-        def clean_some_characters(x, l):
+        texts = character.split('**表情包文字**')[-1]
+
+        def clean_some_characters(x, l, r=''):
             for i in l:
-                x = x.replace(i, '')
+                x = x.replace(i, r)
             return x
         desc = desc.replace(character, '')
         character = character.replace(usage, '')
-        laji = ['表情包主体', '表情包使用场景', ':', '**(', ')；**', ');**', '**', ');', ')', '；', '(', ')', '\n', '：', '（', '）']
-        desc = clean_some_characters(desc, laji).replace('/', ' ').replace('\\', ' ')
-        character = clean_some_characters(character, laji).replace('/', ' ').replace('\\', ' ')
-        usage = clean_some_characters(usage, laji).replace('/', ' ').replace('\\', ' ')
-        return desc, character, usage
+        usage = usage.replace(texts, '')
+        laji = ['表情包主体', '表情包使用场景', '表情包文字', ':', '**(', ')；**', ');**', '**', ');', ')', '；', '(', ')', '\n', '：', '（', '）']
+        seperator = ['/', '\\', ',', '，', '、']
+        desc = clean_some_characters(clean_some_characters(desc, laji), seperator, ' ')
+        character = clean_some_characters(clean_some_characters(character, laji), seperator, ' ')
+        usage = clean_some_characters(clean_some_characters(usage, laji), seperator, ' ')
+        texts = clean_some_characters(clean_some_characters(texts, laji), seperator, ' ')
+        if '无文字' in texts:
+            texts = ''
+        for i in [desc, character, usage]:
+            if len(i) > 20:
+                raise Exception(f'analyze result text error: {text}: \n 模型太蠢（字数过多）， 换个模型或者重试')
+        return desc, character, usage, texts
 
     def _resize_image(self, img):
         """尺寸调整"""
@@ -147,7 +155,14 @@ class LabelMemes():
                         }
                     ]
                 }
-            ]
+            ],
+            "stream": False,
+            "max_tokens": 1024,
+            "stop": ["null"],
+            "temperature": 0.5,
+            "top_p": 0.5,
+            "top_k": 50,
+            "frequency_penalty": 0.0,
         }
         headers = {
             "Authorization": f"Bearer {config.api.silicon_api_key}",

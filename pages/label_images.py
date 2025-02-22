@@ -14,19 +14,7 @@ from config.settings import config, reload_config
 from pages.utils import *
 from services.label_memes import LabelMemes
 
-IMAGE_DIRS_PATH = 'data/image_dirs'
-if not os.path.exists(IMAGE_DIRS_PATH):
-    os.makedirs(IMAGE_DIRS_PATH)
 
-# 获取image_dirs下的所有文件夹
-def get_image_dirs():
-    dirs = ['data/images']  # 默认包含原始图片目录
-    if os.path.exists(IMAGE_DIRS_PATH):
-        for item in os.listdir(IMAGE_DIRS_PATH):
-            item_path = os.path.join(IMAGE_DIRS_PATH, item)
-            if os.path.isdir(item_path):
-                dirs.append(item_path)
-    return dirs
 
 st.set_page_config(
     page_title="LabelImages",
@@ -88,10 +76,10 @@ def pregenerate_label(img_path, label_obj:LabelMemes, result_dict):
             return True
         except Exception as e:
             print(f'pregenerate_label failed: {str(e)}')
+            time.sleep(1)
 
 
 with st.sidebar:
-    # 使用selectbox替代text_input
     st.selectbox(
         '选择图片文件夹',
         options=get_image_dirs(),
@@ -118,12 +106,12 @@ if os.path.exists(st.session_state.image_folder_name):
 
     st.write(st.session_state.image_folder_name)
     img_path = st.session_state.all_images_path[st.session_state.image_index]
-    st.write(img_path)
-    with Image.open(img_path) as img:
-        img_obj = img.copy()
-    img_obj = np.array(img_obj)
-    img_obj = resize_image(img_obj, 256)
-    st.image(img_obj)
+    # st.write(img_path)
+    # with Image.open(img_path) as img:
+    #     img_obj = img.copy()
+    # img_obj = np.array(img_obj)
+    # img_obj = resize_image(img_obj, 256)
+    st.image(img_path, width=256)
 
     col3, col4, col5 = st.columns([1, 1, 1])
 
@@ -148,15 +136,15 @@ if os.path.exists(st.session_state.image_folder_name):
     def use_vlm_result_to_generate_buttons():
         try:
             name_list = st.session_state.img_analyse_result
-            colB1, colB2, colB3 = st.columns([1, 1, 1])
-            for index, i in enumerate([colB1, colB2, colB3]):
+            colB1, colB2, colB3, colB4 = st.columns([1, 1, 1, 1])
+            for index, i in enumerate([colB1, colB2, colB3, colB4]):
                 with i:
                     def create_onc(inner_index):
                         def onc():
                             st.session_state.new_file_name += name_list[inner_index]
                         return onc
-
-                    st.button(f"添加 \"{name_list[index]}\" 到文件名", on_click=create_onc(index),key=f'generate_clicked_{index}')
+                    if not name_list[index] == '':
+                        st.button(f"添加 \"{name_list[index]}\" 到文件名", on_click=create_onc(index),key=f'generate_clicked_{index}')
 
                     # auto mode
                     if st.session_state.auto_generate_labels:
