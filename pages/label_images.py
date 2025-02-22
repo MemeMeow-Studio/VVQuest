@@ -135,12 +135,28 @@ with st.sidebar:
                     tags=tags
                 )
                     
-                st.success("资源包创建成功!")
-                
+                # 生成zip文件
                 try:
-                    shutil.rmtree(pack_dir)
+                    zip_path = st.session_state.resource_pack_service.export_resource_pack(pack_dir)
+                    
+                    # 提供zip文件下载
+                    with open(zip_path, "rb") as f:
+                        st.download_button(
+                            label="下载资源包",
+                            data=f,
+                            file_name=os.path.basename(zip_path),
+                            mime="application/zip"
+                        )
+                    st.success("资源包创建成功!")
                 except Exception as e:
-                    print(f"清理临时文件失败: {str(e)}")
+                    st.error(f"生成zip文件失败: {str(e)}")
+                finally:
+                    # 清理临时文件
+                    try:
+                        if os.path.exists(pack_dir):
+                            shutil.rmtree(pack_dir)
+                    except Exception as e:
+                        print(f"清理临时文件失败: {str(e)}")
                 
         except Exception as e:
             st.error(f"创建资源包失败: {str(e)}")
