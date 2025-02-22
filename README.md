@@ -20,16 +20,20 @@ _✨ 通过自然语言检索表情包 ✨_
 ---
 
 <p align="center">
-    <a href="#Features">Features</a> •
-    <a href="#Screenshots">Screenshots</a> •
-    <a href="#Quick Start">Quick Start</a> •
-    <a href="#Usage">Usage</a> •
-    <a href="#Related Applications">Related Applications</a>
+    <a href="#-features">Features</a> •
+    <a href="#-screenshots">Screenshots</a> •
+    <a href="#-quick-start">Quick Start</a> •
+    <a href="#-usage">Usage</a> •
+    <a href="#-related-applications">Related Applications</a>
 </p>
 
 </div>
 
+<a id="-features"></a>
 ## ✨ Features
+
+> [!CAUTION]
+> 本项目返回表情包结果由AI生成，与本人观点无关。
 
 - **自然语言处理**: 采用嵌入模型，实现 Q&A 式的检索，能够对给出问题自动使用表情包回应。
 - **高拓展性**: 可结合 VLM 高效为图片打上标签，制作资源包并在 [Issues](https://github.com/DanielZhangyc/VVQuest/issues) 中分享。
@@ -38,6 +42,7 @@ _✨ 通过自然语言检索表情包 ✨_
 
 VVQuest 是一个基于自然语言的表情包检索工具。它能让你通过描述想要的场景，快速找到合适的表情包。不再需要记住具体的文件名或标签，就能轻松找到想要的表情！
 
+<a id="-screenshots"></a>
 ## 📸 Screenshots
 
 <table>
@@ -67,8 +72,10 @@ VVQuest 是一个基于自然语言的表情包检索工具。它能让你通过
 
 本项目张维为表情包来源于 [知乎](https://www.zhihu.com/question/656505859/answer/55843704436)
 
-> ⚠️ 若有侵权，请联系删除
+> [!CAUTION]
+> 若有侵权，请联系删除
 
+<a id="-quick-start"></a>
 ## 🚀 Quick Start
 
 ### 环境要求
@@ -94,8 +101,10 @@ pip install -r requirements.txt
 python -m streamlit run app.py
 ```
 
+> [!NOTE]
 > 💡 提示: 首次运行本地模型时会需要下载必要的模型文件，这可能需要一些时间。
 
+<a id="-usage"></a>
 ## 📖 Usage
 
 ### Basic Usage
@@ -112,6 +121,7 @@ python -m streamlit run app.py
 2. 在 `添加表情包` 下选择图片
 3. 可选: 启用 `使用VLM自动生成文件名` 功能，这样省去人工打标的步骤
 
+> [!CAUTION]
 > ⚠️ 注意: 每次上传后需要重新生成缓存。
 
 #### 图片打标
@@ -121,6 +131,7 @@ python -m streamlit run app.py
 3. 点击 `使用VLM生成描述` 生成标签
 4. 选择合适的描述并重命名文件或直接点击 `下一张` (会自动重命名)
 
+> [!TIP]
 > 💡 技巧: 可以在文件名中使用 `-` 分隔多个描述，以增加检索的灵活性。
 
 ### 导出资源包
@@ -130,10 +141,12 @@ python -m streamlit run app.py
 3. 点击 `导出资源包` 按钮
 4. 等待生成完成后点击 `下载资源包`
 
+> [!TIP]
 > 💡 你可以在 [Issues](https://github.com/DanielZhangyc/VVQuest/issues) 中分享你的资源包，或者查看其他用户分享的资源包。
 
 ### 导入资源包 (WIP)
 
+<a id="-related-applications"></a>
 ## 📦 Related Applications
 
 VVQuest 相关应用:
