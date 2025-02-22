@@ -102,7 +102,7 @@ python -m streamlit run app.py
 ```
 
 > [!NOTE]
-> 💡 提示: 首次运行本地模型时会需要下载必要的模型文件，这可能需要一些时间。
+> 首次运行本地模型时会需要下载必要的模型文件，这可能需要一些时间。
 
 <a id="-usage"></a>
 ## 📖 Usage
@@ -122,7 +122,7 @@ python -m streamlit run app.py
 3. 可选: 启用 `使用VLM自动生成文件名` 功能，这样省去人工打标的步骤
 
 > [!CAUTION]
-> ⚠️ 注意: 每次上传后需要重新生成缓存。
+> 每次上传后需要重新生成缓存。
 
 #### 图片打标
 
@@ -130,9 +130,6 @@ python -m streamlit run app.py
 2. 选择图片文件夹
 3. 点击 `使用VLM生成描述` 生成标签
 4. 选择合适的描述并重命名文件或直接点击 `下一张` (会自动重命名)
-
-> [!TIP]
-> 💡 技巧: 可以在文件名中使用 `-` 分隔多个描述，以增加检索的灵活性。
 
 ### 导出资源包
 
@@ -142,7 +139,7 @@ python -m streamlit run app.py
 4. 等待生成完成后点击 `下载资源包`
 
 > [!TIP]
-> 💡 你可以在 [Issues](https://github.com/DanielZhangyc/VVQuest/issues) 中分享你的资源包，或者查看其他用户分享的资源包。
+> 你可以在 [Issues](https://github.com/DanielZhangyc/VVQuest/issues) 中分享你的资源包，或者查看其他用户分享的资源包。
 
 ### 导入资源包 (WIP)
 
