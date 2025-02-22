@@ -40,19 +40,20 @@ with st.sidebar:
 CACHE_PATH = os.path.join(config.base_dir, 'cache')
 verify_folder(CACHE_PATH)
 
-def label_image(image_path):
+def label_image(image_path, show_result_area):
     for i in range(15):
         try:
             l = st.session_state.label_meme_obj.label_image(image_path)
             return f'{l[0]}-{l[1]}-{l[2]}-{l[3]}'
         except Exception as e:
-            st.error(f'第{i + 1}次尝试生成描述失败, 错误信息: {e}')
+            show_result_area.error(f'第{i + 1}次尝试生成描述失败, 错误信息: {e}')
             time.sleep(1)
-    st.error('生成描述失败')
+    show_result_area.error('生成描述失败')
     return False
 
 if uploaded_images:
     show_image_area = st.empty()
+    show_result_area= st.empty()
     for uploaded_image in uploaded_images:
         try:
             img_name = uploaded_image.name
@@ -62,18 +63,22 @@ if uploaded_images:
         img = Image.open(uploaded_image)
         show_image_area.image(img, caption=uploaded_image.name, width=200)
         cache_path = os.path.join(CACHE_PATH, f'{time.time()}.gif')
+        if img.mode == 'P':
+            img = img.convert('RGB')
         img.save(os.path.join(cache_path))
         # 生成图片描述
         if st.session_state.auto_generate_labels:
-            res = label_image(cache_path)
+            res = label_image(cache_path, show_result_area)
             if res:
                 img_name = res + os.path.splitext(img_name)[1]
 
         # 保存上传的图片到指定文件夹
         save_image_path = os.path.join(st.session_state.image_folder_name,img_name )
         if os.path.exists(save_image_path):
-            st.error(f'图片 {save_image_path} 已存在')
+            show_result_area.error(f'图片 {save_image_path} 已存在')
         else:
+            if img.mode == 'P':
+                img = img.convert('RGB')
             img.save(save_image_path)
-            st.success(f'图片 {save_image_path} 已保存')
+            show_result_area.success(f'图片 {save_image_path} 已保存')
     uploaded_images = []
