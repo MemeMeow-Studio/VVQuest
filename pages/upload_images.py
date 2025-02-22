@@ -62,7 +62,7 @@ if uploaded_images:
         # 使用 PIL 打开图片并显示
         img = Image.open(uploaded_image)
         show_image_area.image(img, caption=uploaded_image.name, width=200)
-        cache_path = os.path.join(CACHE_PATH, f'{time.time()}.gif')
+        cache_path = os.path.join(CACHE_PATH, img_name)
         if img.mode == 'P':
             img = img.convert('RGB')
         img.save(os.path.join(cache_path))
