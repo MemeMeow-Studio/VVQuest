@@ -63,7 +63,7 @@ if uploaded_images:
         img = Image.open(uploaded_image)
         show_image_area.image(img, caption=uploaded_image.name, width=200)
         cache_path = os.path.join(CACHE_PATH, img_name)
-        if img.mode == 'P':
+        if img.mode == 'P': #TODO: 检查这行代码是否不需要
             img = img.convert('RGB')
         img.save(os.path.join(cache_path))
         # 生成图片描述
@@ -81,4 +81,4 @@ if uploaded_images:
                 img = img.convert('RGB')
             img.save(save_image_path)
             show_result_area.success(f'图片 {save_image_path} 已保存')
-    uploaded_images = []
+    uploaded_images = [] # 这行代码没用，那个组件仍然会保存已上传的文件
