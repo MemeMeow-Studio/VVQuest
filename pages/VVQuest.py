@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-def save_config_yaml(api_key: str) -> None:
+def save_config_yaml(api_key: str, base_url: str) -> None:
     """保存API key到config.yaml"""
     config_path = 'config/config.yaml'
     try:
@@ -21,8 +21,8 @@ def save_config_yaml(api_key: str) -> None:
             config_data = yaml.safe_load(f)
         
         # 更新API key
-        config_data['api']['silicon_api_key'] = api_key
-        
+        config_data['api']['embedding_models']['api_key'] = api_key
+        config_data['api']['embedding_models']['base_url'] = base_url
         # 保存配置
         with open(config_path, 'w', encoding='utf-8') as f:
             yaml.dump(config_data, f, allow_unicode=True)
@@ -33,7 +33,7 @@ def save_config_yaml(api_key: str) -> None:
         # 更新EmbeddingService的API key
         if st.session_state.search_engine:
             st.session_state.search_engine.embedding_service.api_key = api_key
-            
+            st.session_state.search_engine.embedding_service.base_url = base_url
     except Exception as e:
         st.error(f"保存配置失败: {str(e)}")
 
@@ -56,7 +56,13 @@ if 'search_query' not in st.session_state:
 if 'n_results' not in st.session_state:
     st.session_state.n_results = 5
 if 'api_key' not in st.session_state:
-    st.session_state.api_key = config.api.silicon_api_key
+    st.session_state.api_key = config.api.embedding_models.api_key
+    if st.session_state.api_key is None:
+        st.session_state.api_key = ''
+if 'base_url' not in st.session_state:
+    st.session_state.base_url = config.api.embedding_models.base_url
+    if st.session_state.base_url is None:
+        st.session_state.base_url = ''
 if 'mode' not in st.session_state:
     st.session_state.mode = 'api'
 if 'model_name' not in st.session_state:
@@ -106,7 +112,14 @@ def on_api_key_change():
     if new_key != st.session_state.api_key:
         st.session_state.api_key = new_key
         # 保存到配置文件
-        save_config_yaml(new_key)
+        save_config_yaml(new_key, st.session_state.base_url)
+        
+def on_base_url_change():
+    new_base_url = st.session_state.base_url_input
+    if new_base_url != st.session_state.base_url:
+        st.session_state.base_url = new_base_url
+        # 保存到配置文件
+        save_config_yaml(st.session_state.api_key, new_base_url)
 
 def on_mode_change():
     new_mode = st.session_state.mode_widget
@@ -213,11 +226,17 @@ with st.sidebar:
     # API密钥输入(仅API模式)
     if st.session_state.mode == 'api':
         api_key = st.text_input(
-            "请输入 SILICON API Key", 
+            "请输入API Key", 
             value=st.session_state.api_key,
             type="password",
             key="api_key_input",
             on_change=on_api_key_change
+        )
+        base_url = st.text_input(
+            "请输入Base URL", 
+            value=st.session_state.base_url,
+            key="base_url_input",
+            on_change=on_base_url_change
         )
     
     # 生成缓存按钮
