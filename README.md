@@ -62,6 +62,10 @@ pic_example:
 
 <img width="256" alt="3bfb772e239f3437a13d46252aab1e1d" src="https://github.com/user-attachments/assets/d7e02f8f-205d-42ef-9c80-49f98aff64a6" />
 
+## Useful Links
+
+- [与本项目相关的iOS快捷指令](https://www.icloud.com/shortcuts/e6b0bd4c1b4c4b5195ff4e256fb009f8)
+
 ## LICENSE
 
 check [LICENSE](LICENSE)
