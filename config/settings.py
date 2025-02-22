@@ -31,8 +31,13 @@ class PathsConfig(BaseConfig):
     api_embeddings_cache_file: str
     label_images_cache_file: str
 
+class OpenaiConfig(BaseConfig):
+    base_url: str
+    api_key: Optional[str] = None
+
 class ApiConfig(BaseConfig):
-    silicon_api_key: Optional[str] = None
+    embedding_models: OpenaiConfig
+    vlm_models: OpenaiConfig
 
 class MiscConfig(BaseConfig):
     adapt_for_old_version: bool

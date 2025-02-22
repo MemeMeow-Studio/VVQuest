@@ -1,5 +1,10 @@
 api:
-  silicon_api_key:
+  embedding_models:
+    base_url: https://api.siliconflow.com/v1
+    api_key: 
+  vlm_models:
+    base_url: https://api.siliconflow.com/v1
+    api_key: 
 misc:
   adapt_for_old_version: true
 models:

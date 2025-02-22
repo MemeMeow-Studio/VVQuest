@@ -2,6 +2,8 @@ import os
 import sys
 
 import requests
+import openai
+from openai import OpenAI
 import pickle
 from config.settings import config
 from typing import List, Optional, Union
@@ -13,8 +15,8 @@ from services.utils import verify_folder
 
 class EmbeddingService:
     def __init__(self):
-        self.api_key = config.api.silicon_api_key
-        self.endpoint = "https://api.siliconflow.com/v1/embeddings" 
+        self.api_key = config.api.embedding_models.api_key
+        self.base_url = config.api.embedding_models.base_url
         self.local_models = {}
         self.current_model = None
         self.mode = 'api'  # 'api' or 'local'
@@ -146,7 +148,6 @@ class EmbeddingService:
         """获取文本嵌入并归一化"""
         if self.mode == 'api':
             # API 模式
-            headers = {"Authorization": f"Bearer {key if key is not None else self.api_key}"}
             model_name = config.models.embedding_models['bge-m3'].name
             payload = {
                 "input": text,
@@ -159,17 +160,17 @@ class EmbeddingService:
                         print(f'using cache: {model_name} {text}')
                     embedding = self.embedding_cache[model_name][text]
                 else:
-                    response = requests.post(self.endpoint, json=payload, headers=headers)
-                    response.raise_for_status()  # 抛出详细的HTTP错误
-                    embedding = response.json()['data'][0]['embedding']
+                    # 检查是否指定新的api key，如果指定则更新api key
+                    if key is not None and key != self.api_key:
+                        self.api_key = key
+                    client = OpenAI(api_key=self.api_key, base_url=self.base_url)
+                    response = client.embeddings.create(**payload)
+                    embedding = response.data[0].embedding
+                    
                     if model_name not in self.embedding_cache.keys():
                         self.embedding_cache[model_name] = {}
                     self.embedding_cache[model_name][text] = embedding
-            except requests.exceptions.RequestException as e:
-                if hasattr(e.response, 'status_code') and e.response.status_code == 400:
-                    # 尝试打印详细的错误信息
-                    error_msg = e.response.json() if e.response.text else "未知错误"
-                    print(f"API请求参数错误: {error_msg}")
+            except openai.OpenAIError as e:
                 raise RuntimeError(f"API请求失败: {str(e)}\n请求参数: {payload}")
         else:
             # 本地模式
