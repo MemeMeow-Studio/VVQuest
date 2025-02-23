@@ -38,6 +38,6 @@ def get_image_dirs():
             item_path = os.path.join(IMAGE_DIRS_PATH, item)
             if os.path.isdir(item_path):
                 dirs.append(item_path)
-    for i in Config().paths.image_dirs.keys():
-        dirs.append(i)
+    for i in Config().paths.image_dirs.values():
+        dirs.append(i['path'])
     return dirs
