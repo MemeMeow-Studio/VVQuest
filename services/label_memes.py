@@ -1,7 +1,7 @@
 import base64
 
 from services.utils import *
-from config.settings import config
+from config.settings import Config
 import cv2
 from PIL import Image, ImageEnhance
 import io
@@ -16,8 +16,8 @@ PROMOTE = """你是一位表情包分类专家。请分析这个表情包，要�
 
 class LabelMemes():
     def __init__(self):
-        self.api_key = config.api.vlm_models.api_key
-        self.base_url = config.api.vlm_models.base_url
+        self.api_key = Config().api.vlm_models.api_key
+        self.base_url = Config().api.vlm_models.base_url
         self.cache = {}
         self.use_cache = False
         self._load_cache()
@@ -30,14 +30,14 @@ class LabelMemes():
         }
 
     def _load_cache(self):
-        cache_file = config.get_label_images_cache_file()
+        cache_file = Config().get_label_images_cache_file()
         verify_folder(cache_file)
         if os.path.exists(cache_file):
             with open(cache_file, 'rb') as f:
                 self.cache = pickle.load(f)
 
     def _save_cache(self):
-        cache_file = config.get_label_images_cache_file()
+        cache_file = Config().get_label_images_cache_file()
         with open(cache_file, 'wb') as f:
             pickle.dump(self.cache, f)
 
@@ -106,7 +106,7 @@ class LabelMemes():
 
     def label_image(self, image_path):
         # 检查缓存
-        model_name = config.models.vlm_models['Qwen2-VL-72B-Instruct'].name
+        model_name = Config().models.vlm_models['Qwen2-VL-72B-Instruct'].name
         if not model_name in self.cache.keys():
             self.cache[model_name] = {}
 
@@ -134,7 +134,7 @@ class LabelMemes():
         url = "https://api.siliconflow.cn/v1/chat/completions"
 
         payload = {
-            "model": config.models.vlm_models['Qwen2-VL-72B-Instruct'].name,
+            "model": Config().models.vlm_models['Qwen2-VL-72B-Instruct'].name,
             "messages": [
                 {
                     "role": "system",

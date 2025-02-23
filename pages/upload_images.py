@@ -11,7 +11,7 @@ from PIL import Image
 import threading
 
 from services.image_search import ImageSearch
-from config.settings import config, reload_config
+from config.settings import Config
 from pages.utils import *
 from services.label_memes import LabelMemes
 from services.utils import verify_folder
@@ -37,7 +37,7 @@ with st.sidebar:
 
     uploaded_images = st.file_uploader(label='添加表情包', accept_multiple_files=True, type=['png', 'jpg', 'jpeg', 'gif'])
 
-CACHE_PATH = os.path.join(config.base_dir, 'cache')
+CACHE_PATH = os.path.join(Config().base_dir, 'cache')
 verify_folder(CACHE_PATH)
 
 def label_image(image_path, show_result_area):

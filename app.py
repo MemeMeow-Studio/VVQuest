@@ -3,7 +3,7 @@ import random
 import os
 import yaml
 from services.image_search import ImageSearch
-from config.settings import config, reload_config
+from config.settings import Config
 from services.utils import verify_folder
 
 
@@ -22,7 +22,7 @@ def delete_all_files_in_folder(folder_path):
     except Exception as e:
         print(f"删除过程中出现错误: {e}")
 
-verify_folder(os.path.join(config.base_dir, "cache"))
-delete_all_files_in_folder(os.path.join(config.base_dir, "cache"))
+verify_folder(os.path.join(Config().base_dir, "cache"))
+delete_all_files_in_folder(os.path.join(Config().base_dir, "cache"))
 pg = st.navigation([st.Page("pages/VVQuest.py"), st.Page("pages/label_images.py"), st.Page("pages/upload_images.py")])
 pg.run()

@@ -11,7 +11,7 @@ from PIL import Image
 import threading
 
 from services.image_search import ImageSearch
-from config.settings import config, reload_config
+from config.settings import Config
 from pages.utils import *
 from services.label_memes import LabelMemes
 from services.resource_pack import ResourcePackService

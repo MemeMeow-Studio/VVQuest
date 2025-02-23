@@ -1,7 +1,7 @@
 import os
 
 import cv2
-from config.settings import config
+from config.settings import Config
 
 def get_all_file_paths(folder_path):
     # 用于存储所有文件的绝对路径
@@ -38,6 +38,6 @@ def get_image_dirs():
             item_path = os.path.join(IMAGE_DIRS_PATH, item)
             if os.path.isdir(item_path):
                 dirs.append(item_path)
-    for i in config.paths.image_dirs.keys():
+    for i in Config().paths.image_dirs.keys():
         dirs.append(i)
     return dirs

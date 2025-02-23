@@ -2,7 +2,7 @@ import streamlit as st
 import random
 import yaml
 from services.image_search import ImageSearch
-from config.settings import config, reload_config
+from config.settings import Config
 
 # 页面配置
 st.set_page_config(
@@ -16,19 +16,11 @@ def save_config_yaml(api_key: str, base_url: str) -> None:
     """保存API key到config.yaml"""
     config_path = 'config/config.yaml'
     try:
-        # 读取当前配置
-        with open(config_path, 'r', encoding='utf-8') as f:
-            config_data = yaml.safe_load(f)
-        
+
         # 更新API key
-        config_data['api']['embedding_models']['api_key'] = api_key
-        config_data['api']['embedding_models']['base_url'] = base_url
-        # 保存配置
-        with open(config_path, 'w', encoding='utf-8') as f:
-            yaml.dump(config_data, f, allow_unicode=True)
-            
-        # 重新加载配置
-        reload_config()
+        with Config() as config_data:
+            config_data.api.embedding_models.api_key = api_key
+            config_data.api.embedding_models.base_url = base_url
         
         # 更新EmbeddingService的API key
         if st.session_state.search_engine:
@@ -56,17 +48,17 @@ if 'search_query' not in st.session_state:
 if 'n_results' not in st.session_state:
     st.session_state.n_results = 5
 if 'api_key' not in st.session_state:
-    st.session_state.api_key = config.api.embedding_models.api_key
+    st.session_state.api_key = Config().api.embedding_models.api_key
     if st.session_state.api_key is None:
         st.session_state.api_key = ''
 if 'base_url' not in st.session_state:
-    st.session_state.base_url = config.api.embedding_models.base_url
+    st.session_state.base_url = Config().api.embedding_models.base_url
     if st.session_state.base_url is None:
         st.session_state.base_url = ''
 if 'mode' not in st.session_state:
     st.session_state.mode = 'api'
 if 'model_name' not in st.session_state:
-    st.session_state.model_name = config.models.default_model
+    st.session_state.model_name = Config().models.default_model
 if 'search_engine' not in st.session_state:
     st.session_state.search_engine = ImageSearch(
         mode=st.session_state.mode,
@@ -183,7 +175,7 @@ with st.sidebar:
         # 生成模型选项和显示名称的映射
         model_options = []
         model_display_names = {}
-        for model_id, info in config.models.embedding_models.items():
+        for model_id, info in Config().models.embedding_models.items():
             downloaded = st.session_state.search_engine.embedding_service.is_model_downloaded(model_id)
             status = "✅" if downloaded else "⬇️"
             display_name = f"{model_id} [{info.performance}] {status}"
