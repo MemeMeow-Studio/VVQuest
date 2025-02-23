@@ -1,10 +1,12 @@
 import base64
 
 from services.utils import *
-from config.settings import config
+from config.settings import Config
 import cv2
 from PIL import Image, ImageEnhance
 import io
+import openai
+from openai import OpenAI
 
 PROMOTE = """你是一位表情包分类专家。请分析这个表情包，要求：
 
@@ -14,8 +16,8 @@ PROMOTE = """你是一位表情包分类专家。请分析这个表情包，要�
 
 class LabelMemes():
     def __init__(self):
-        self.api_key = config.api.silicon_api_key
-        self.endpoint = "https://api.siliconflow.com/v1/embeddings"
+        self.api_key = Config().api.vlm_models.api_key
+        self.base_url = Config().api.vlm_models.base_url
         self.cache = {}
         self.use_cache = False
         self._load_cache()
@@ -28,14 +30,14 @@ class LabelMemes():
         }
 
     def _load_cache(self):
-        cache_file = config.get_label_images_cache_file()
+        cache_file = Config().get_label_images_cache_file()
         verify_folder(cache_file)
         if os.path.exists(cache_file):
             with open(cache_file, 'rb') as f:
                 self.cache = pickle.load(f)
 
     def _save_cache(self):
-        cache_file = config.get_label_images_cache_file()
+        cache_file = Config().get_label_images_cache_file()
         with open(cache_file, 'wb') as f:
             pickle.dump(self.cache, f)
 
@@ -104,7 +106,7 @@ class LabelMemes():
 
     def label_image(self, image_path):
         # 检查缓存
-        model_name = config.models.vlm_models['Qwen2-VL-72B-Instruct'].name
+        model_name = Config().models.vlm_models['Qwen2-VL-72B-Instruct'].name
         if not model_name in self.cache.keys():
             self.cache[model_name] = {}
 
@@ -132,7 +134,7 @@ class LabelMemes():
         url = "https://api.siliconflow.cn/v1/chat/completions"
 
         payload = {
-            "model": config.models.vlm_models['Qwen2-VL-72B-Instruct'].name,
+            "model": Config().models.vlm_models['Qwen2-VL-72B-Instruct'].name,
             "messages": [
                 {
                     "role": "system",
@@ -161,12 +163,7 @@ class LabelMemes():
             "stop": ["null"],
             "temperature": 0.5,
             "top_p": 0.5,
-            "top_k": 50,
             "frequency_penalty": 0.0,
-        }
-        headers = {
-            "Authorization": f"Bearer {config.api.silicon_api_key}",
-            "Content-Type": "application/json"
         }
 
 
@@ -195,9 +192,9 @@ class LabelMemes():
         '''
 
         try:
-            response = requests.request("POST", url, json=payload, headers=headers)
-            response.raise_for_status()  # 抛出详细的HTTP错误
-            description = response.json()['choices'][0]['message']['content']
+            client = OpenAI(api_key=self.api_key, base_url=self.base_url)
+            response = client.chat.completions.create(**payload)
+            description = response.choices[0].message.content
             
             # 缓存结果
             self.cache[model_name][get_file_hash(image_path)] = {
@@ -207,13 +204,16 @@ class LabelMemes():
             self._save_cache()
             
             return self._analyze_result_text(description)
-            
-        except requests.exceptions.RequestException as e:
-            if hasattr(e.response, 'status_code') and e.response.status_code == 400:
-                # 尝试打印详细的错误信息
-                error_msg = e.response.json() if e.response.text else "未知错误"
-                print(f"API请求参数错误: {str(error_msg).replace(img_str, 'IMGDATA')}")
+        
+        except openai.OpenAIError as e:
             raise RuntimeError(f"API请求失败: {str(e)}\n请求参数: {str(payload).replace(img_str, 'IMGDATA')}")
+            
+        # except requests.exceptions.RequestException as e:
+        #     if hasattr(e.response, 'status_code') and e.response.status_code == 400:
+        #         # 尝试打印详细的错误信息
+        #         error_msg = e.response.json() if e.response.text else "未知错误"
+        #         print(f"API请求参数错误: {str(error_msg).replace(img_str, 'IMGDATA')}")
+        #     raise RuntimeError(f"API请求失败: {str(e)}\n请求参数: {str(payload).replace(img_str, 'IMGDATA')}")
 
 if __name__ == "__main__":
     lm = LabelMemes()

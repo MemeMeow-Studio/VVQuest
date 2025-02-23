@@ -4,7 +4,7 @@ import pickle
 import re
 from typing import Optional, List, Dict
 
-from config.settings import config
+from config.settings import Config
 
 from services.embedding_service import EmbeddingService
 
@@ -28,7 +28,7 @@ class ImageSearch:
                     if 'filepath' in item:
                         full_path = item['filepath']
                     else:
-                        full_path = os.path.join(config.get_absolute_image_dirs()[0], item['filename'])
+                        full_path = os.path.join(Config().get_absolute_image_dirs()[0], item['filename'])
                         # 添加filepath字段
                         item['filepath'] = full_path
 
@@ -48,8 +48,8 @@ class ImageSearch:
     def _get_cache_file(self) -> str:
         """获取当前模式的缓存文件路径"""
         if self.embedding_service.selected_model:
-            return config.get_absolute_cache_file().replace('.pkl', f'_{self.embedding_service.selected_model}.pkl')
-        return config.get_absolute_cache_file()
+            return Config().get_absolute_cache_file().replace('.pkl', f'_{self.embedding_service.selected_model}.pkl')
+        return Config().get_absolute_cache_file()
         
     def set_mode(self, mode: str, model_name: Optional[str] = None) -> None:
         """切换搜索模式和模型"""
@@ -87,7 +87,7 @@ class ImageSearch:
             self.load_model()  # 确保模型已加载
             
         # 获取所有图片目录
-        image_dirs = config.get_absolute_image_dirs()
+        image_dirs = Config().get_absolute_image_dirs()
         for img_dir in image_dirs:
             if not os.path.exists(img_dir):
                 os.makedirs(img_dir, exist_ok=True)
@@ -98,7 +98,7 @@ class ImageSearch:
             # 确保所有缓存数据都有filepath字段
             for item in self.image_data:
                 if 'filepath' not in item:
-                    item['filepath'] = os.path.join(config.get_absolute_image_dirs()[0], item['filename'])
+                    item['filepath'] = os.path.join(Config().get_absolute_image_dirs()[0], item['filename'])
             generated_files = [i['filepath'] for i in self.image_data]
 
         # 获取所有路径
@@ -117,11 +117,11 @@ class ImageSearch:
         embeddings = []
         errors = []  # 收集错误
         # 按照图片文件夹分开循环
-        for dirs_k, dirs_v in config.paths.image_dirs.items():
+        for dirs_k, dirs_v in Config().paths.image_dirs.items():
             all_dir = []
 
             img_dir = dirs_v['path']
-            if not os.path.isabs(img_dir): img_dir = os.path.join(config.base_dir, img_dir)
+            if not os.path.isabs(img_dir): img_dir = os.path.join(Config().base_dir, img_dir)
             all_dir = get_all_file_paths(img_dir)
 
             # 构建文件路径列表
@@ -142,7 +142,7 @@ class ImageSearch:
 
             for index, filepath in enumerate(image_files):
                 try:
-                    if not os.path.isabs(filepath): filepath = os.path.join(config.base_dir, filepath)
+                    if not os.path.isabs(filepath): filepath = os.path.join(Config().base_dir, filepath)
                     filename = os.path.splitext(os.path.basename(filepath))[0]
 
                     full_filename = None
@@ -218,8 +218,8 @@ class ImageSearch:
         similarities = []
         exists_imgs_path = []
         for img in self.image_data:
-            if 'filepath' not in img and config.misc.adapt_for_old_version:
-                img['filepath'] = os.path.join(config.get_absolute_image_dirs()[0], img["filename"])
+            if 'filepath' not in img and Config().misc.adapt_for_old_version:
+                img['filepath'] = os.path.join(Config().get_absolute_image_dirs()[0], img["filename"])
             if os.path.exists(img['filepath']):
                 similarities.append((img['filepath'], self._cosine_similarity(query_embedding, img["embedding"])))
         

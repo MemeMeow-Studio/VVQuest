@@ -9,3 +9,4 @@ confz
 opencv-python
 pyyaml
 pillow
+openai

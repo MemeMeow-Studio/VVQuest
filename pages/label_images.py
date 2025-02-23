@@ -11,7 +11,7 @@ from PIL import Image
 import threading
 
 from services.image_search import ImageSearch
-from config.settings import config, reload_config
+from config.settings import Config
 from pages.utils import *
 from services.label_memes import LabelMemes
 from services.resource_pack import ResourcePackService
@@ -50,6 +50,16 @@ if 'pre_generate_result' not in st.session_state:
 if 'resource_pack_service' not in st.session_state:
     st.session_state.resource_pack_service = ResourcePackService()
 
+# api
+if 'api_key' not in st.session_state:
+    st.session_state.vlm_api_key = Config().api.vlm_models.api_key
+    if st.session_state.vlm_api_key is None:
+        st.session_state.vlm_api_key = ''
+if 'base_url' not in st.session_state:
+    st.session_state.base_url = Config().api.vlm_models.base_url
+    if st.session_state.base_url is None:
+        st.session_state.base_url = ''
+
 def onchange_folder_name():
     st.session_state.image_index = 0
     st.session_state.all_images_path = get_all_file_paths(st.session_state.image_folder_name)
@@ -83,6 +93,23 @@ def pregenerate_label(img_path, label_obj:LabelMemes, result_dict):
             time.sleep(1)
 
 
+def on_api_key_change():
+    new_key = st.session_state.api_key_input
+    if new_key != st.session_state.vlm_api_key:
+        st.session_state.vlm_api_key = new_key
+        # 保存到配置文件
+        with Config() as config:
+            config.api.vlm_models.api_key = st.session_state.vlm_api_key
+
+
+def on_base_url_change():
+    new_base_url = st.session_state.base_url_input
+    if new_base_url != st.session_state.base_url:
+        st.session_state.base_url = new_base_url
+        # 保存到配置文件
+        with Config() as config:
+            config.api.vlm_models.base_url = st.session_state.base_url
+
 with st.sidebar:
     st.selectbox(
         '选择图片文件夹',
@@ -102,6 +129,19 @@ with st.sidebar:
 
     # """暂未实现，预生成的性能足够用，不太需要"""
     # st.button('开始/启动自动生成',on_click=onclick_start_stop_auto_generate)
+    api_key = st.text_input(
+        "请输入API Key",
+        value=st.session_state.vlm_api_key,
+        type="password",
+        key="api_key_input",
+        on_change=on_api_key_change
+    )
+    base_url = st.text_input(
+        "请输入Base URL",
+        value=st.session_state.base_url,
+        key="base_url_input",
+        on_change=on_base_url_change
+    )
 
     st.divider()
     st.subheader("资源包导出")

@@ -2,8 +2,10 @@ import os
 import sys
 
 import requests
+import openai
+from openai import OpenAI
 import pickle
-from config.settings import config
+from config.settings import Config
 from typing import List, Optional, Union
 import numpy as np
 from FlagEmbedding import BGEM3FlagModel
@@ -13,8 +15,8 @@ from services.utils import verify_folder
 
 class EmbeddingService:
     def __init__(self):
-        self.api_key = config.api.silicon_api_key
-        self.endpoint = "https://api.siliconflow.com/v1/embeddings" 
+        self.api_key = Config().api.embedding_models.api_key
+        self.base_url = Config().api.embedding_models.base_url
         self.local_models = {}
         self.current_model = None
         self.mode = 'api'  # 'api' or 'local'
@@ -25,12 +27,12 @@ class EmbeddingService:
     def _get_embedding_cache(self):
         """获取嵌入缓存"""
         if self.mode == 'api':
-            cache_file = config.get_abs_api_cache_file()
+            cache_file = Config().get_abs_api_cache_file()
             verify_folder(cache_file)
         else:
             if not self.selected_model:
                 return
-            cache_file = config.get_absolute_cache_file().replace('.pkl', f'_{self.selected_model}.pkl')
+            cache_file = Config().get_absolute_cache_file().replace('.pkl', f'_{self.selected_model}.pkl')
             verify_folder(cache_file)
             
         if os.path.exists(cache_file):
@@ -40,11 +42,11 @@ class EmbeddingService:
     def save_embedding_cache(self):
         """保存嵌入缓存"""
         if self.mode == 'api':
-            cache_file = config.get_abs_api_cache_file()
+            cache_file = Config().get_abs_api_cache_file()
         else:
             if not self.selected_model:
                 return
-            cache_file = config.get_absolute_cache_file().replace('.pkl', f'_{self.selected_model}.pkl')
+            cache_file = Config().get_absolute_cache_file().replace('.pkl', f'_{self.selected_model}.pkl')
             
         if sys.gettrace() is not None:
             print(f'saving cache: {sum(len(i) for i in self.embedding_cache.values())}')
@@ -53,11 +55,11 @@ class EmbeddingService:
 
     def _download_model(self, model_name: str) -> None:
         """下载模型到本地"""
-        model_info = config.models.embedding_models.get(model_name)
+        model_info = Config().models.embedding_models.get(model_name)
         if not model_info:
             raise ValueError(f"未知的模型: {model_name}")
             
-        model_path = config.get_model_path(model_name)
+        model_path = Config().get_model_path(model_name)
         if not os.path.exists(model_path):
             os.makedirs(model_path, exist_ok=True)
             print(f"正在下载模型 {model_name}...")
@@ -71,7 +73,7 @@ class EmbeddingService:
         """加载本地模型"""
         try:
             if model_name not in self.local_models:
-                model_path = config.get_model_path(model_name)
+                model_path = Config().get_model_path(model_name)
                 if not os.path.exists(model_path):
                     raise RuntimeError(f"模型 {model_name} 尚未下载")
                 print(f"正在加载模型 {model_name}...")
@@ -87,7 +89,7 @@ class EmbeddingService:
             if model_name in self.local_models:
                 del self.local_models[model_name]
             # 删除可能损坏的模型文件
-            model_path = config.get_model_path(model_name)
+            model_path = Config().get_model_path(model_name)
             if os.path.exists(model_path):
                 import shutil
                 shutil.rmtree(model_path)
@@ -101,7 +103,7 @@ class EmbeddingService:
         self.mode = mode
         if mode == 'local':
             if model_name is None:
-                model_name = config.models.default_model
+                model_name = Config().models.default_model
             self.selected_model = model_name
             # 如果模型已下载，尝试加载
             if self.is_model_downloaded(model_name):
@@ -132,7 +134,7 @@ class EmbeddingService:
             
     def is_model_downloaded(self, model_name: str) -> bool:
         """检查模型是否已下载"""
-        model_path = config.get_model_path(model_name)
+        model_path = Config().get_model_path(model_name)
         return os.path.exists(model_path)
             
     @staticmethod
@@ -146,8 +148,7 @@ class EmbeddingService:
         """获取文本嵌入并归一化"""
         if self.mode == 'api':
             # API 模式
-            headers = {"Authorization": f"Bearer {key if key is not None else self.api_key}"}
-            model_name = config.models.embedding_models['bge-m3'].name
+            model_name = Config().models.embedding_models['bge-m3'].name
             payload = {
                 "input": text,
                 "model": model_name,
@@ -159,17 +160,17 @@ class EmbeddingService:
                         print(f'using cache: {model_name} {text}')
                     embedding = self.embedding_cache[model_name][text]
                 else:
-                    response = requests.post(self.endpoint, json=payload, headers=headers)
-                    response.raise_for_status()  # 抛出详细的HTTP错误
-                    embedding = response.json()['data'][0]['embedding']
+                    # 检查是否指定新的api key，如果指定则更新api key
+                    if key is not None and key != self.api_key:
+                        self.api_key = key
+                    client = OpenAI(api_key=self.api_key, base_url=self.base_url)
+                    response = client.embeddings.create(**payload)
+                    embedding = response.data[0].embedding
+                    
                     if model_name not in self.embedding_cache.keys():
                         self.embedding_cache[model_name] = {}
                     self.embedding_cache[model_name][text] = embedding
-            except requests.exceptions.RequestException as e:
-                if hasattr(e.response, 'status_code') and e.response.status_code == 400:
-                    # 尝试打印详细的错误信息
-                    error_msg = e.response.json() if e.response.text else "未知错误"
-                    print(f"API请求参数错误: {error_msg}")
+            except openai.OpenAIError as e:
                 raise RuntimeError(f"API请求失败: {str(e)}\n请求参数: {payload}")
         else:
             # 本地模式
