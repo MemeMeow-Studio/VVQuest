@@ -16,15 +16,13 @@ def save_config_yaml(api_key: str, base_url: str) -> None:
     """保存API key到config.yaml"""
     config_path = 'config/config.yaml'
     try:
-
         # 更新API key
         with Config() as config_data:
             config_data.api.embedding_models.api_key = api_key
             config_data.api.embedding_models.base_url = base_url
-        
         # 更新EmbeddingService的API key
         if st.session_state.search_engine:
-            st.session_state.search_engine.embedding_service.api_key = api_key
+            st.session_state.search_engine.embedding_service.embedding_api_key = api_key
             st.session_state.search_engine.embedding_service.base_url = base_url
     except Exception as e:
         st.error(f"保存配置失败: {str(e)}")
@@ -48,9 +46,9 @@ if 'search_query' not in st.session_state:
 if 'n_results' not in st.session_state:
     st.session_state.n_results = 5
 if 'api_key' not in st.session_state:
-    st.session_state.api_key = Config().api.embedding_models.api_key
-    if st.session_state.api_key is None:
-        st.session_state.api_key = ''
+    st.session_state.embedding_api_key = Config().api.embedding_models.api_key
+    if st.session_state.embedding_api_key is None:
+        st.session_state.embedding_api_key = ''
 if 'base_url' not in st.session_state:
     st.session_state.base_url = Config().api.embedding_models.base_url
     if st.session_state.base_url is None:
@@ -78,7 +76,7 @@ def search():
             results = st.session_state.search_engine.search(
                 st.session_state.search_query, 
                 st.session_state.n_results,
-                st.session_state.api_key if st.session_state.mode == 'api' else None
+                st.session_state.embedding_api_key if st.session_state.mode == 'api' else None
             )
             st.session_state.results = results if results else []
             return st.session_state.results
@@ -101,8 +99,8 @@ def on_slider_change():
 
 def on_api_key_change():
     new_key = st.session_state.api_key_input
-    if new_key != st.session_state.api_key:
-        st.session_state.api_key = new_key
+    if new_key != st.session_state.embedding_api_key:
+        st.session_state.embedding_api_key = new_key
         # 保存到配置文件
         save_config_yaml(new_key, st.session_state.base_url)
         
@@ -111,7 +109,7 @@ def on_base_url_change():
     if new_base_url != st.session_state.base_url:
         st.session_state.base_url = new_base_url
         # 保存到配置文件
-        save_config_yaml(st.session_state.api_key, new_base_url)
+        save_config_yaml(st.session_state.embedding_api_key, new_base_url)
 
 def on_mode_change():
     new_mode = st.session_state.mode_widget
@@ -219,7 +217,7 @@ with st.sidebar:
     if st.session_state.mode == 'api':
         api_key = st.text_input(
             "请输入API Key", 
-            value=st.session_state.api_key,
+            value=st.session_state.embedding_api_key,
             type="password",
             key="api_key_input",
             on_change=on_api_key_change
