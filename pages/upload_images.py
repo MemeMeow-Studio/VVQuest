@@ -20,6 +20,11 @@ if 'label_meme_obj' not in st.session_state:
     st.session_state.label_meme_obj = LabelMemes()
 if 'image_folder_name' not in st.session_state:
     st.session_state.image_folder_name = 'data/images'  # 默认使用原始图片目录
+# 初始化会话状态
+if 'show_input' not in st.session_state:
+    st.session_state.show_input = False
+if 'input_text' not in st.session_state:
+    st.session_state.input_text = None
 # api
 if 'api_key' not in st.session_state:
     st.session_state.vlm_api_key = Config().api.vlm_models.api_key
@@ -48,6 +53,12 @@ def on_base_url_change():
         with Config() as config:
             config.api.vlm_models.base_url = st.session_state.base_url
 
+def onclick_add_image_folder():
+    st.text_input(
+        '请输入文件夹名称',
+        key='new_image_folder_name',
+    )
+
 with st.sidebar:
     st.selectbox(
         '选择图片文件夹',
@@ -56,11 +67,29 @@ with st.sidebar:
         help='选择导入后的图片文件夹'
     )
 
+    # 创建一个按钮
+    if st.button('新建图片文件夹'):
+        st.session_state.show_input = True
+
+    # 如果需要显示输入框和确定按钮
+    if st.session_state.show_input:
+        # 创建文本输入框
+        input_text = st.text_input('新文件夹名')
+        # 创建确定按钮
+        if st.button('确定'):
+            # 保存输入的文本
+            st.session_state.input_text = input_text
+            # 隐藏输入框和确定按钮
+            st.session_state.show_input = False
+            # 清空页面，重新显示内容
+            st.rerun()
+
     st.checkbox(
         '使用VLM自动生成文件名',
         key='auto_generate_labels',
         value=True
     )
+
     api_key = st.text_input(
         "请输入API Key",
         value=st.session_state.vlm_api_key,
@@ -80,6 +109,17 @@ with st.sidebar:
 
 CACHE_PATH = os.path.join(Config().base_dir, 'cache')
 verify_folder(CACHE_PATH)
+
+if st.session_state.input_text:
+    path = os.path.join(Config().base_dir, 'data', st.session_state.input_text)
+    verify_folder(path)
+    with Config() as config:
+        config.paths.image_dirs[st.session_state.input_text] = {
+            'path': path
+        }
+    st.success(f'文件夹 {st.session_state.input_text} 已创建')
+    st.session_state.input_text = None
+
 
 def label_image(image_path, show_result_area):
     for i in range(15):

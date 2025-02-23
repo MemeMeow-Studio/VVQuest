@@ -32,9 +32,6 @@ class BaseConfig(BaseModel, frozen=False, extra='allow'):
 
     def __init__(self, /, **data: t.Any):
         super().__init__(**data)
-        self.__dict__['settled_keys'] = [].copy()
-        self.__dict__['settled_values'] = [].copy()
-
         self.__dict__['settled_dicts'] = []
 
 
@@ -64,27 +61,26 @@ class BaseConfig(BaseModel, frozen=False, extra='allow'):
                         r = append_my_key_to_keys(r)
                         return r
 
-    def __setattr__(self, key, value):
-        print(f"setattr:{key}-{value}")
-        # if 'settled_keys' in self.__dict__:
-        #     if key not in ['settled_keys', 'settled_values']:
-        #         if not isinstance(value, BaseConfig):
-        #             self.settled_values.append(value)
-        #         else:
-        #             self.__dict__['settled_values'].append(value.settled_values)
-        #         self.__dict__['settled_keys'].append(key)
-        #
-        #     else:
-        #         print()
-        # else:
-        #     print()
-        if 'settled_dicts' in self.__dict__:
-            if not isinstance(value, BaseConfig):
-                self.__dict__['settled_dicts'].append({
-                    'key': [key],
-                    'value': value
-                })
+    # def __setattr__(self, key, value):
+    #     print(f"setattr:{key}-{value}")
+    #     if 'settled_dicts' in self.__dict__:
+    #         if not isinstance(value, BaseConfig):
+    #             self.__dict__['settled_dicts'].append({
+    #                 'key': [key],
+    #                 'value': value
+    #             })
 
+class ObserverdDict(dict):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__dict__['settled_dicts'] = []
+    def __setitem__(self, key, value):
+        print(f"setitem:{key}-{value}")
+        if not isinstance(value, BaseConfig):
+            self.__dict__['settled_dicts'].append({
+                'key': [key],
+                'value': value
+            })
 
 class EmbeddingModelConfig(BaseConfig):
     name: str
@@ -166,14 +162,14 @@ class Config(BaseConfig):
     def __exit__(self, exc_type, exc_val, exc_tb):
         if sys.gettrace() is not None:
             print('Exiting the context')
-        r = self.get_changed_kv('config')
-        saving_dict = load_yaml_file(CONFIG_FILE)
-        for k_v in r:
-            k_v['key'].pop(0)
-            saving_dict = update_nested_dict(saving_dict, k_v['key'], k_v['value'])
-        if sys.gettrace() is not None:
-            print(r)
-        save_yaml_file(saving_dict, CONFIG_FILE)
+        # r = self.get_changed_kv('config')
+        # saving_dict = load_yaml_file(CONFIG_FILE)
+        # for k_v in r:
+        #     k_v['key'].pop(0)
+        #     saving_dict = update_nested_dict(saving_dict, k_v['key'], k_v['value'])
+        # if sys.gettrace() is not None:
+        #     print(r)
+        save_yaml_file(self.dict(), CONFIG_FILE)
 
     # def __del__(self):
     #     print('Config object is being deleted')
@@ -230,3 +226,4 @@ if __name__ == '__main__':
         config.api.embedding_models.base_url = '123'
     """使用配置：每次使用前实例化Config"""
     print(Config().api.embedding_models.base_url)
+
