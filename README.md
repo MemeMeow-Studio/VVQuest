@@ -24,6 +24,7 @@ _✨ 通过自然语言检索表情包 ✨_
     <a href="#-screenshots">Screenshots</a> •
     <a href="#-quick-start">Quick Start</a> •
     <a href="#-usage">Usage</a> •
+    <a href="#-api">API</a> •
     <a href="#-related-applications">Related Applications</a>
 </p>
 
@@ -143,6 +144,30 @@ python -m streamlit run app.py
 
 ### 导入资源包 (WIP)
 
+<a id="-api"></a>
+## 🔌 API
+
+本项目开放 API 接口，共各位开发者快捷使用，具体请求方式如下：
+
+### Endpoint
+`GET https://api.zvv.quest/search`
+
+### 请求参数
+| 参数名 | 类型 | 简介 | 是否必填 | 范围 |
+|-----------|--------|-----------------------------------------------|----------|----------------------|
+| `q`       | string | 要查询的内容（例如关键词或某个话题）  | ✅       | -                    |
+| `n`       | integer| 返回的图片数量 | ✅       | 1 - 50               |
+
+### 返回格式
+返回格式为json，结构如下：
+
+| 字段   | 数据类型 | 简介 |
+|----------|-----------|-----------------------------------------------|
+| `code`   | int    | 响应状态码 (200代表成功) |
+| `data`   | string[]  | 图片的URL列表 |
+| `msg`    | string    | 如果响应出错的情况下，对应的错误信息，成功时为空 |
+
+
 <a id="-related-applications"></a>
 ## 📦 Related Applications
 
@@ -155,10 +180,6 @@ VVQuest 相关应用:
 
 > [!TIP]
 > 如果你想添加你的应用，请提交 [PR](https://github.com/DanielZhangyc/VVQuest/pulls) 或 [Issue](https://github.com/DanielZhangyc/VVQuest/issues)
-
-## Useful Links
-
-- [与本项目相关的iOS快捷指令](https://www.icloud.com/shortcuts/e6b0bd4c1b4c4b5195ff4e256fb009f8)
 
 ## 📄 License
 
