@@ -185,7 +185,7 @@ class Config(BaseConfig):
         """获取模型保存路径"""
         return os.path.join(self.base_dir, self.paths.models_dir, model_name.replace('/', '_'))
 
-    def get_absolute_image_dirs(self) -> List[str]:
+    def get_abs_image_dirs(self) -> List[str]:
         """获取图片目录的绝对路径"""
         r = []
         for v in self.paths.image_dirs.values():
@@ -196,9 +196,13 @@ class Config(BaseConfig):
 
         return r
 
-    def get_absolute_cache_file(self) -> str:
+    def get_abs_cache_file(self) -> str:
         """获取缓存文件的绝对路径"""
         return os.path.join(self.base_dir, self.paths.cache_file)
+
+    def get_abs_cover_cache_file(self) -> str:
+        """获取封缓存文件的绝对路径"""
+        return os.path.join(self.base_dir, self.paths.cover_cache)
 
     def get_abs_api_cache_file(self) -> str:
         """获取缓存文件的绝对路径"""

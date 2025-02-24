@@ -32,7 +32,7 @@ class EmbeddingService:
         else:
             if not self.selected_model:
                 return
-            cache_file = Config().get_absolute_cache_file().replace('.pkl', f'_{self.selected_model}.pkl')
+            cache_file = Config().get_abs_cache_file().replace('.pkl', f'_{self.selected_model}.pkl')
             verify_folder(cache_file)
             
         if os.path.exists(cache_file):
@@ -46,7 +46,7 @@ class EmbeddingService:
         else:
             if not self.selected_model:
                 return
-            cache_file = Config().get_absolute_cache_file().replace('.pkl', f'_{self.selected_model}.pkl')
+            cache_file = Config().get_abs_cache_file().replace('.pkl', f'_{self.selected_model}.pkl')
             
         if sys.gettrace() is not None:
             print(f'saving cache: {sum(len(i) for i in self.embedding_cache.values())}')

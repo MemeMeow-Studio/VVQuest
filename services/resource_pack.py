@@ -23,6 +23,7 @@ class ResourcePackService:
                            author: str,
                            description: str,
                            image_paths: List[str],
+                           cover_image: Optional[str] = None,
                            tags: Optional[List[str]] = None) -> str:
         
         if not name or not version or not author:
@@ -56,6 +57,28 @@ class ResourcePackService:
             verify_folder(images_dir)
         except Exception as e:
             raise ResourcePackError(f"创建图片目录失败: {str(e)}")
+        
+        # 处理封面图片
+        cover_info = None
+        if cover_image and os.path.exists(cover_image):
+            try:
+                cover_name = os.path.basename(cover_image)
+                name_without_ext, ext = os.path.splitext(cover_name)
+                ext = ext.lower()
+                
+                file_hash = get_file_hash(cover_image)
+                if file_hash:
+                    new_cover_name = f"cover{ext}"
+                    new_cover_path = os.path.join(pack_dir, new_cover_name)
+                    shutil.copy2(cover_image, new_cover_path)
+                    print(f"复制封面: {cover_image} -> {new_cover_path}")
+                    cover_info = {
+                        "filename": new_cover_name,
+                        "original_name": cover_name,
+                        "hash": file_hash
+                    }
+            except Exception as e:
+                print(str(e))
         
         copied_files = []
         file_mapping = {} 
@@ -98,6 +121,7 @@ class ResourcePackService:
             "description": description,
             "created_at": datetime.now().strftime("%Y-%m-%d"),
             "tags": tags or [],
+            "cover": cover_info,
             "contents": {
                 "images": {
                     "path": "images/",
