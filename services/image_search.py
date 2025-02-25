@@ -28,7 +28,7 @@ class ImageSearch:
                     if 'filepath' in item:
                         full_path = item['filepath']
                     else:
-                        full_path = os.path.join(Config().get_abs_image_dirs()[0], item['filename'])
+                        full_path = os.path.join(Config().get_absolute_image_dirs()[0], item['filename'])
                         # 添加filepath字段
                         item['filepath'] = full_path
 
@@ -87,7 +87,7 @@ class ImageSearch:
             self.load_model()  # 确保模型已加载
             
         # 获取所有图片目录
-        image_dirs = Config().get_ab_image_dirs()
+        image_dirs = Config().get_absolute_image_dirs()
         for img_dir in image_dirs:
             if not os.path.exists(img_dir):
                 os.makedirs(img_dir, exist_ok=True)
@@ -98,7 +98,7 @@ class ImageSearch:
             # 确保所有缓存数据都有filepath字段
             for item in self.image_data:
                 if 'filepath' not in item:
-                    item['filepath'] = os.path.join(Config().get_abs_image_dirs()[0], item['filename'])
+                    item['filepath'] = os.path.join(Config().get_absolute_image_dirs()[0], item['filename'])
             generated_files = [i['filepath'] for i in self.image_data]
 
         # 获取所有路径
@@ -219,7 +219,7 @@ class ImageSearch:
         exists_imgs_path = []
         for img in self.image_data:
             if 'filepath' not in img and Config().misc.adapt_for_old_version:
-                img['filepath'] = os.path.join(Config().get_abs_image_dirs()[0], img["filename"])
+                img['filepath'] = os.path.join(Config().get_absolute_image_dirs()[0], img["filename"])
             if os.path.exists(img['filepath']):
                 similarities.append((img['filepath'], self._cosine_similarity(query_embedding, img["embedding"])))
         
