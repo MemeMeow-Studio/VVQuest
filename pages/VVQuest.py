@@ -64,6 +64,8 @@ if 'search_engine' not in st.session_state:
     )
 if 'has_cache' not in st.session_state:
     st.session_state.has_cache = st.session_state.search_engine.has_cache()
+if 'show_resource_packs' not in st.session_state:
+    st.session_state.show_resource_packs = False
 
 # 搜索函数
 def search():
@@ -120,6 +122,10 @@ def on_mode_change():
                 st.session_state.search_engine.set_mode(new_mode, st.session_state.model_name)
             else:
                 st.session_state.search_engine.set_mode(new_mode)
+            # 重新加载资源包，确保缓存状态更新
+            st.session_state.search_engine.reload_resource_packs()
+            # 更新缓存状态
+            st.session_state.has_cache = st.session_state.search_engine.has_cache()
             if st.session_state.search_query:
                 st.session_state.results = search()
         except Exception as e:
@@ -133,6 +139,10 @@ def on_model_change():
         if st.session_state.mode == 'local':
             try:
                 st.session_state.search_engine.set_mode('local', new_model)
+                # 重新加载资源包，确保缓存状态更新
+                st.session_state.search_engine.reload_resource_packs()
+                # 更新缓存状态
+                st.session_state.has_cache = st.session_state.search_engine.has_cache()
                 if st.session_state.search_query:
                     st.session_state.results = search()
             except Exception as e:
@@ -153,6 +163,35 @@ def on_generate_cache():
         # 强制重新检查缓存状态
         st.session_state.has_cache = st.session_state.search_engine.has_cache()
     st.success('缓存生成完成！')
+
+def on_toggle_resource_packs():
+    """切换资源包面板显示状态"""
+    st.session_state.show_resource_packs = not st.session_state.show_resource_packs
+
+def on_enable_resource_pack(pack_id):
+    """启用资源包回调"""
+    if st.session_state.search_engine.enable_resource_pack(pack_id):
+        st.success(f"已启用资源包")
+        # 更新缓存状态
+        st.session_state.has_cache = st.session_state.search_engine.has_cache()
+    else:
+        st.error(f"启用资源包失败")
+
+def on_disable_resource_pack(pack_id):
+    """禁用资源包回调"""
+    if st.session_state.search_engine.disable_resource_pack(pack_id):
+        st.success(f"已禁用资源包")
+        # 更新缓存状态
+        st.session_state.has_cache = st.session_state.search_engine.has_cache()
+    else:
+        st.error(f"禁用资源包失败")
+
+def on_reload_resource_packs():
+    """重新加载资源包回调"""
+    st.session_state.search_engine.reload_resource_packs()
+    st.success("已重新加载资源包")
+    # 更新缓存状态
+    st.session_state.has_cache = st.session_state.search_engine.has_cache()
 
 # 侧边栏搜索区域
 with st.sidebar:
@@ -228,6 +267,86 @@ with st.sidebar:
             key="base_url_input",
             on_change=on_base_url_change
         )
+    
+    # 资源包管理按钮
+    st.button(
+        "资源包管理" if not st.session_state.show_resource_packs else "隐藏资源包管理",
+        on_click=on_toggle_resource_packs,
+        help="管理表情包资源包",
+        key="toggle_resource_packs_btn",
+        use_container_width=True
+    )
+    
+    # 资源包管理面板
+    if st.session_state.show_resource_packs:
+        st.subheader("资源包管理")
+        
+        # 重新加载资源包按钮
+        st.button(
+            "重新扫描资源包",
+            on_click=on_reload_resource_packs,
+            help="重新扫描resource_packs目录，加载新的资源包",
+            key="reload_resource_packs_btn",
+            use_container_width=True
+        )
+        
+        # 获取所有资源包
+        resource_packs = st.session_state.search_engine.get_resource_packs()
+        enabled_packs = st.session_state.search_engine.get_enabled_resource_packs()
+        
+        if not resource_packs:
+            st.info("没有找到资源包，请将资源包解压到resource_packs目录")
+        else:
+            st.write(f"找到 {len(resource_packs)} 个资源包，已启用 {len(enabled_packs)} 个")
+            
+            # 显示资源包列表
+            for pack_id, pack_info in resource_packs.items():
+                with st.container():
+                    col1, col2 = st.columns([3, 1])
+                    
+                    with col1:
+                        # 获取封面图片
+                        cover_path = st.session_state.search_engine.get_resource_pack_cover(pack_id)
+                        if cover_path:
+                            st.image(cover_path, width=64)
+                            
+                        st.write(f"**{pack_info['name']}** v{pack_info['version']}")
+                        st.caption(f"作者: {pack_info['author']}")
+                        if pack_info.get('description'):
+                            st.caption(pack_info['description'])
+                        
+                        # 显示缓存状态
+                        cache_generated = st.session_state.search_engine.resource_pack_manager.is_pack_cache_generated(
+                            pack_id, 
+                            st.session_state.search_engine.embedding_service.selected_model
+                        )
+                        if cache_generated:
+                            st.success("缓存已生成", icon="✅")
+                        else:
+                            st.warning("缓存未生成", icon="⚠️")
+                    
+                    with col2:
+                        if pack_info['enabled']:
+                            if not pack_info.get('is_default', False):
+                                st.button(
+                                    "禁用",
+                                    key=f"disable_{pack_id}",
+                                    on_click=on_disable_resource_pack,
+                                    args=(pack_id,),
+                                    use_container_width=True
+                                )
+                            else:
+                                st.write("默认资源包")
+                        else:
+                            st.button(
+                                "启用",
+                                key=f"enable_{pack_id}",
+                                on_click=on_enable_resource_pack,
+                                args=(pack_id,),
+                                use_container_width=True
+                            )
+                    
+                    st.divider()
     
     # 生成缓存按钮
     has_cache = st.session_state.search_engine.has_cache()

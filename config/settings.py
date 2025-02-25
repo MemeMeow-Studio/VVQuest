@@ -102,6 +102,7 @@ class PathsConfig(BaseConfig):
     models_dir: str
     api_embeddings_cache_file: str
     label_images_cache_file: str
+    resource_packs_dir: str = "resource_packs"
 
 class OpenaiConfig(BaseConfig):
     base_url: str
@@ -113,6 +114,12 @@ class ApiConfig(BaseConfig):
 
 class MiscConfig(BaseConfig):
     adapt_for_old_version: bool
+
+class ResourcePackConfig(BaseConfig):
+    enabled: bool = False
+    path: Optional[str] = None
+    type: Optional[str] = None
+    cache_file: Optional[str] = None
 
 def update_nested_dict(dictionary, keys, value):
     """
@@ -162,6 +169,7 @@ class Config(BaseConfig):
     models: ModelsConfig
     paths: PathsConfig
     misc: MiscConfig
+    resource_packs: Dict[str, ResourcePackConfig] = {}
 
     # CONFIG_SOURCES = [
     #     FileSource(
