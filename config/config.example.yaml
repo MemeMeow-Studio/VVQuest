@@ -30,6 +30,7 @@ paths:
   api_embeddings_cache_file: data/api_embeddings_cache.pkl
   label_images_cache_file: data/label_images_cache.pkl
   cache_file: data/embeddings.pkl
+  cover_cache: cache/covers
   image_dirs:
     default:
       path: data/images

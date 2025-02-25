@@ -1,5 +1,6 @@
 import inspect
 import os, sys, shutil
+import threading
 from typing import Dict, List, Optional
 import yaml
 from pydantic import Field, BaseModel
@@ -131,6 +132,31 @@ def update_nested_dict(dictionary, keys, value):
         update_nested_dict(dictionary[key], keys[1:], value)
     return dictionary
 
+
+class ConfigCache:
+    def __init__(self):
+        self.config:dict|None = None
+        self.modify_config_lock = threading.Lock()
+    def set_config(self, config_):
+        self.modify_config_lock.acquire()
+        self.config = config_
+        self.modify_config_lock.release()
+    def del_config(self):
+        self.modify_config_lock.acquire()
+        self.config = None
+        self.modify_config_lock.release()
+
+    def get_config(self):
+        if self.config is not None:
+            self.modify_config_lock.acquire()
+            c = self.config.copy()
+            self.modify_config_lock.release()
+            return c
+        else:
+            return False
+
+config_cache = ConfigCache()
+
 class Config(BaseConfig):
     api: ApiConfig
     models: ModelsConfig
@@ -151,9 +177,12 @@ class Config(BaseConfig):
             filename = frame.f_code.co_filename
             lineno = frame.f_lineno
             print(f"Config 类在 {frame.f_code.co_name} 被实例化。")
-        data = load_yaml_file(CONFIG_FILE)
-        global last_loaded_config
-        last_loaded_config = data
+        data = config_cache.get_config()
+        if not data:
+            if sys.gettrace() is not None:
+                print('loading config')
+            data = load_yaml_file(CONFIG_FILE)
+            config_cache.set_config(data)
         super().__init__(**data)
 
     def __enter__(self):
@@ -169,7 +198,8 @@ class Config(BaseConfig):
         #     saving_dict = update_nested_dict(saving_dict, k_v['key'], k_v['value'])
         # if sys.gettrace() is not None:
         #     print(r)
-        save_yaml_file(self.dict(), CONFIG_FILE)
+        save_yaml_file(self.model_dump(), CONFIG_FILE)
+        config_cache.del_config()
 
     # def __del__(self):
     #     print('Config object is being deleted')
@@ -185,7 +215,7 @@ class Config(BaseConfig):
         """获取模型保存路径"""
         return os.path.join(self.base_dir, self.paths.models_dir, model_name.replace('/', '_'))
 
-    def get_absolute_image_dirs(self) -> List[str]:
+    def get_abs_image_dirs(self) -> List[str]:
         """获取图片目录的绝对路径"""
         r = []
         for v in self.paths.image_dirs.values():
@@ -196,9 +226,13 @@ class Config(BaseConfig):
 
         return r
 
-    def get_absolute_cache_file(self) -> str:
+    def get_abs_cache_file(self) -> str:
         """获取缓存文件的绝对路径"""
         return os.path.join(self.base_dir, self.paths.cache_file)
+
+    def get_abs_cover_cache_file(self) -> str:
+        """获取封缓存文件的绝对路径"""
+        return os.path.join(self.base_dir, self.paths.cover_cache)
 
     def get_abs_api_cache_file(self) -> str:
         """获取缓存文件的绝对路径"""

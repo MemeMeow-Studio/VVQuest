@@ -9,6 +9,7 @@ import random
 import yaml
 from PIL import Image
 import threading
+from streamlit_cropper import st_cropper
 
 from services.image_search import ImageSearch
 from config.settings import Config
@@ -16,7 +17,26 @@ from pages.utils import *
 from services.label_memes import LabelMemes
 from services.resource_pack import ResourcePackService
 
+COVERS_DIR = os.path.join(Config().get_abs_cover_cache_file())
+os.makedirs(COVERS_DIR, exist_ok=True)
 
+def cleanup_temp_covers():
+    """清理临时封面文件目录"""
+    try:
+        if os.path.exists(COVERS_DIR):
+            for filename in os.listdir(COVERS_DIR):
+                file_path = os.path.join(COVERS_DIR, filename)
+                try:
+                    if os.path.isfile(file_path):
+                        os.unlink(file_path)
+                except Exception as e:
+                    print(f"清理临时文件失败 {file_path}: {str(e)}")
+        print("临时封面文件清理完成")
+    except Exception as e:
+        print(f"清理临时目录失败: {str(e)}")
+
+# 封面图片尺寸
+COVER_SIZE = (512, 512)
 
 st.set_page_config(
     page_title="LabelImages",
@@ -152,6 +172,30 @@ with st.sidebar:
     pack_author = st.text_input("作者", value="", help="资源包作者,不能为空")
     pack_description = st.text_input("描述", value="", help="资源包的简要描述")
     pack_tags = st.text_input("标签", value="", help="用英文逗号分隔多个标签")
+    
+    # 添加封面图片上传和裁剪
+    pack_cover = st.file_uploader("封面图片", type=['png', 'jpg', 'jpeg'], help="上传资源包封面图片(可选),建议使用方形图片")
+    
+    if pack_cover:
+        img = Image.open(pack_cover)
+        
+        st.write("请裁剪封面图片")
+        cropped_img = st_cropper(
+            img,
+            realtime_update=True,
+            box_color='#FF0000',
+            aspect_ratio=(1, 1),
+            return_type='image'
+        )
+        
+        resized_img = cropped_img.resize(COVER_SIZE, Image.Resampling.LANCZOS)
+        st.image(resized_img, caption="封面预览")
+        if 'cropped_cover_path' not in st.session_state:
+            st.session_state.cropped_cover_path = None
+            
+        temp_cover = os.path.join(COVERS_DIR, f"cover_{int(time.time())}.png")
+        resized_img.save(temp_cover, "PNG")
+        st.session_state.cropped_cover_path = temp_cover
             
     export_disabled = not (pack_name and pack_version and pack_author)
     export_help = "请填写必要信息" if export_disabled else "创建并下载资源包"
@@ -164,6 +208,7 @@ with st.sidebar:
                 
             with st.spinner("正在创建资源包..."):
                 tags = [tag.strip() for tag in pack_tags.split(",") if tag.strip()]
+                cover_path = st.session_state.cropped_cover_path if pack_cover else None
                 
                 # 创建资源包
                 pack_dir = st.session_state.resource_pack_service.create_resource_pack(
@@ -172,8 +217,10 @@ with st.sidebar:
                     author=pack_author,
                     description=pack_description,
                     image_paths=st.session_state.all_images_path,
+                    cover_image=cover_path,
                     tags=tags
                 )
+                cleanup_temp_covers()
                     
                 # 生成zip文件
                 try:
@@ -195,6 +242,8 @@ with st.sidebar:
                     try:
                         if os.path.exists(pack_dir):
                             shutil.rmtree(pack_dir)
+                        if cover_path and os.path.exists(cover_path):
+                            os.remove(cover_path)
                     except Exception as e:
                         print(f"清理临时文件失败: {str(e)}")
                 

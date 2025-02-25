@@ -75,3 +75,38 @@ def load_image(image_path) -> np.ndarray:
     except Exception as e:
         raise (f"处理图像时出现错误: {e}")
 
+def calculate_image_similarity(img1, img2):
+    """
+    该函数用于计算两张图片的相似度
+    :param image_path1: 第一张图片的路径
+    :param image_path2: 第二张图片的路径
+    :return: 两张图片的相似度值
+    """
+
+    # 确保图片尺寸相同
+    img2 = cv2.resize(img2, (img1.shape[1], img1.shape[0]))
+
+    # # 计算直方图
+    # hist1 = cv2.calcHist([img1], [0, 1, 2], None, [8, 8, 8], [0, 256, 0, 256, 0, 256])
+    # hist2 = cv2.calcHist([img2], [0, 1, 2], None, [8, 8, 8], [0, 256, 0, 256, 0, 256])
+    #
+    # # 归一化直方图
+    # hist1 = cv2.normalize(hist1, hist1).flatten()
+    # hist2 = cv2.normalize(hist2, hist2).flatten()
+    #
+    # # 计算相似度
+    # similarity = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL)
+
+    result = cv2.matchTemplate(img1, img2, cv2.TM_CCORR_NORMED)  # TM_CCOEFF_NORMED
+
+    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+    similarity = max_val
+
+    if sys.gettrace() is not None:
+        print(similarity)
+    return similarity
+
+
+
+
+
