@@ -52,8 +52,8 @@ class ImageSearch:
     def _get_cache_file(self) -> str:
         """获取当前模式的缓存文件路径"""
         if self.embedding_service.selected_model:
-            return Config().get_absolute_cache_file().replace('.pkl', f'_{self.embedding_service.selected_model}.pkl')
-        return Config().get_absolute_cache_file()
+            return Config().get_abs_cache_file().replace('.pkl', f'_{self.embedding_service.selected_model}.pkl')
+        return Config().get_abs_cache_file()
 
     def set_mode(self, mode: str, model_name: Optional[str] = None) -> None:
         """切换搜索模式和模型"""
