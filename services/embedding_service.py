@@ -28,7 +28,7 @@ class EmbeddingService:
         self._get_embedding_cache()
         self.cache_lock = threading.Lock()
         self.client = OpenAI(api_key=self.api_key, base_url=self.base_url)
-        self.rpm_monitor = []
+        self.rpm_monitor = [0]
 
     def _get_embedding_cache(self):
         """获取嵌入缓存"""
@@ -56,6 +56,10 @@ class EmbeddingService:
         if send_count >= 1800:
             return True
         return False
+
+    def get_last_request_time(self):
+        """获取最后一次请求的时间"""
+        return self.rpm_monitor[-1]
 
     def save_embedding_cache(self):
         """保存嵌入缓存"""

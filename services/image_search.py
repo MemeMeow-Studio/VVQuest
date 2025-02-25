@@ -201,9 +201,10 @@ class ImageSearch:
                     progress_bar.progress((index + 1) / length, text=f"处理图片 {index + 1}/{length}")
                     # 8390276452^f2f4352f
                     if index % 150 == 0:
-                        self.embedding_service.cache_lock.acquire()
-                        self.embedding_service.save_embedding_cache()
-                        self.embedding_service.cache_lock.release()
+                        if time.time()-self.embedding_service.get_last_request_time()<60:
+                            self.embedding_service.cache_lock.acquire()
+                            self.embedding_service.save_embedding_cache()
+                            self.embedding_service.cache_lock.release()
 
                 except Exception as e:
                     print(f"生成嵌入失败 [{filepath}]: {str(e)}")
