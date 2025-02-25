@@ -166,7 +166,7 @@ class EmbeddingService:
         """获取文本嵌入并归一化"""
         if self.mode == 'api':
             # API 模式
-            model_name = self.static_config.models.embedding_models['bge-m3'].name
+            model_name = Config().models.embedding_models['bge-m3'].name
             payload = {
                 "input": text,
                 "model": model_name,

@@ -10,6 +10,7 @@ from typing import Optional, List, Dict
 from config.settings import Config
 
 from services.embedding_service import EmbeddingService
+from services.utils import *
 
 
 class ImageSearch:
@@ -32,7 +33,7 @@ class ImageSearch:
                     if 'filepath' in item:
                         full_path = item['filepath']
                     else:
-                        full_path = os.path.join(Config().get_absolute_image_dirs()[0], item['filename'])
+                        full_path = os.path.join(Config().get_abs_image_dirs()[0], item['filename'])
                         # 添加filepath字段
                         item['filepath'] = full_path
 
@@ -91,7 +92,7 @@ class ImageSearch:
             self.load_model()  # 确保模型已加载
 
         # 获取所有图片目录
-        image_dirs = Config().get_absolute_image_dirs()
+        image_dirs = Config().get_abs_image_dirs()
         for img_dir in image_dirs:
             if not os.path.exists(img_dir):
                 os.makedirs(img_dir, exist_ok=True)
@@ -102,7 +103,7 @@ class ImageSearch:
             # 确保所有缓存数据都有filepath字段
             for item in self.image_data:
                 if 'filepath' not in item:
-                    item['filepath'] = os.path.join(Config().get_absolute_image_dirs()[0], item['filename'])
+                    item['filepath'] = os.path.join(Config().get_abs_image_dirs()[0], item['filename'])
             generated_files = [i['filepath'] for i in self.image_data]
 
         # 获取所有路径
@@ -199,7 +200,7 @@ class ImageSearch:
 
                     progress_bar.progress((index + 1) / length, text=f"处理图片 {index + 1}/{length}")
                     # 8390276452^f2f4352f
-                    if index % 100 == 0:
+                    if index % 150 == 0:
                         self.embedding_service.cache_lock.acquire()
                         self.embedding_service.save_embedding_cache()
                         self.embedding_service.cache_lock.release()
@@ -244,9 +245,11 @@ class ImageSearch:
         exists_imgs_path = []
         for img in self.image_data:
             if 'filepath' not in img and Config().misc.adapt_for_old_version:
-                img['filepath'] = os.path.join(Config().get_absolute_image_dirs()[0], img["filename"])
+                img['filepath'] = os.path.join(Config().get_abs_image_dirs()[0], img["filename"])
             if os.path.exists(img['filepath']):
-                similarities.append((img['filepath'], self._cosine_similarity(query_embedding, img["embedding"])))
+                similarities.append(({
+                                     'path': img['filepath'],
+                                     'embedding_name': img['embedding_name'],}, self._cosine_similarity(query_embedding, img["embedding"])))
 
         if not similarities:
             return []
@@ -256,10 +259,48 @@ class ImageSearch:
         return_list = []
         count = 0
         for i in sorted_items:
-            if count >= top_k:
+            if count >= top_k*5:
                 break
-            if i[0] not in exists_imgs_path:
+            if i[0]['path'] not in exists_imgs_path:
                 return_list.append(i[0])
-                exists_imgs_path.append(i[0])
+                exists_imgs_path.append(i[0]['path'])
                 count += 1
-        return return_list
+
+        # 随机化输出
+
+        skip_indexes = []
+        return_list_2 = []
+        for index, i in enumerate(return_list):
+            if len(return_list_2) >= top_k:
+                break
+            if index in skip_indexes:
+                continue
+            randomize_list = [i]
+            for jndex, j in enumerate(return_list[index+1:]):
+                if i['embedding_name'] == j['embedding_name']:
+                    randomize_list.append(j)
+                    skip_indexes.append(index+jndex+1)
+            if len(randomize_list) >= 2:
+                return_list_2 += [i['path'] for i in pop_similar_images(randomize_list)]
+            else:
+                return_list_2.append(i['path'])
+
+        return return_list_2
+
+def pop_similar_images(input_image_list, threshold=0.9):
+    return_images = []
+    image_list = []
+    for index, i in enumerate(input_image_list):
+        c = i.copy()
+        c['image'] = load_image(i['path'])
+        image_list.append(c)
+    for index, img in enumerate(image_list):
+
+        max_similar = 0
+        print(index)
+        for j in image_list[index+1:]:
+            max_similar = max(max_similar, calculate_image_similarity(img['image'], j['image']))
+        if max_similar < threshold:
+            return_images.append(img)
+
+    return return_images
