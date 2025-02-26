@@ -288,7 +288,7 @@ if os.path.exists(st.session_state.image_folder_name):
                 with i:
                     def create_onc(inner_index):
                         def onc():
-                            st.session_state.new_file_name += name_list[inner_index]
+                            st.session_state.new_file_name += f'{name_list[inner_index]}-'
                         return onc
                     if not name_list[index] == '':
                         st.button(f"添加 \"{name_list[index]}\" 到文件名", on_click=create_onc(index),key=f'generate_clicked_{index}')
