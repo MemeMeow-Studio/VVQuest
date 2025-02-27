@@ -209,7 +209,7 @@ class Config(BaseConfig):
         super().__init__(**data)
 
     def __enter__(self):
-        if self.__dict__['keep_tracked']:
+        if 'keep_tracked' in self.__dict__ and self.__dict__['keep_tracked']:
             raise RuntimeError('Config object is being tracked, which cannot be modified.')
         return self
 
@@ -267,7 +267,7 @@ class Config(BaseConfig):
         return os.path.join(self.base_dir,self.paths.label_images_cache_file)
 
     def __getattr__(self, item):
-        if self.__dict__['keep_tracked']:
+        if 'keep_tracked' in self.__dict__ and self.__dict__['keep_tracked']:
             return Config().__getattr__(item)
         else:
             return super().__getattr__(item)
