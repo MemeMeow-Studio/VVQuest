@@ -4,6 +4,8 @@ import shutil
 import zipfile
 from datetime import datetime
 from typing import List, Dict, Optional
+
+from config.settings import Config
 from .utils import verify_folder, get_file_hash
 
 class ResourcePackError(Exception):
@@ -176,4 +178,15 @@ class ResourcePackService:
                 os.remove(zip_path)
             raise ResourcePackError(f"创建zip文件失败: {str(e)}")
     
-        return zip_path 
+        return zip_path
+
+    def import_resource_pack(self, zip_file):
+        target_dir = Config().paths.resource_packs_dir
+        verify_folder(target_dir)
+        target_dir = os.path.join(target_dir, os.path.splitext(os.path.basename(zip_file.name))[0])
+        try:
+            with zipfile.ZipFile(zip_file) as zip_ref:
+                zip_ref.extractall(target_dir)
+            print(f"成功解压 {zip_file.name} 到 {target_dir}")
+        except Exception as e:
+            raise ResourcePackError(f"解压ZIP文件失败: {str(e)}")

@@ -3,6 +3,7 @@ import random
 import yaml
 from services.image_search import ImageSearch
 from config.settings import Config
+from services.resource_pack import ResourcePackService
 
 # 页面配置
 st.set_page_config(
@@ -193,6 +194,7 @@ def on_reload_resource_packs():
     # 更新缓存状态
     st.session_state.has_cache = st.session_state.search_engine.has_cache()
 
+
 # 侧边栏搜索区域
 with st.sidebar:
     st.title("🔍 VV智能回应")
@@ -280,7 +282,16 @@ with st.sidebar:
     # 资源包管理面板
     if st.session_state.show_resource_packs:
         st.subheader("资源包管理")
-        
+
+        # 加载资源包
+        files = st.file_uploader("导入资源包",
+                         type=["zip"],
+                                 accept_multiple_files=True,)
+        if files:
+            for file in files:
+                # 解压资源包到resource_packs目录
+                ResourcePackService().import_resource_pack(file)
+                st.success(f"导入资源包 {file.name} 成功")
         # 重新加载资源包按钮
         st.button(
             "重新扫描资源包",
@@ -347,7 +358,9 @@ with st.sidebar:
                             )
                     
                     st.divider()
-    
+
+
+
     # 生成缓存按钮
     has_cache = st.session_state.search_engine.has_cache()
     can_generate_cache = (
