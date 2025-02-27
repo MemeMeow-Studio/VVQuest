@@ -22,7 +22,11 @@ class ImageSearch:
         self.image_data = None
         self._try_load_cache()
 
+    def __reload_class_cache(self):
+        self.embedding_service = EmbeddingService()
+
     def _try_load_cache(self) -> None:
+        self.__reload_class_cache()
         """尝试加载缓存"""
         # 获取所有启用的资源包的缓存文件
         cache_files = self.resource_pack_manager.get_cache_files()
@@ -133,6 +137,7 @@ class ImageSearch:
         return self.image_data is not None
 
     def generate_cache(self, progress_bar) -> None:
+        self.__reload_class_cache()
         """生成缓存"""
         if self.embedding_service.mode == 'local':
             # 确保模型已加载
@@ -170,6 +175,7 @@ class ImageSearch:
             raise RuntimeError(error_message)
 
     def _generate_pack_cache(self, pack_id: str, pack_info: Dict, progress_bar) -> None:
+        self.__reload_class_cache()
         """为指定的资源包生成缓存"""
         img_dir = pack_info["path"]
         if not os.path.isabs(img_dir):
@@ -359,6 +365,7 @@ class ImageSearch:
         return np.dot(a, b)
 
     def search(self, query: str, top_k: int = 5, api_key: Optional[str] = None) -> List[str]:
+        self.__reload_class_cache()
         """语义搜索最匹配的图片"""
         if not self.has_cache():
             return []

@@ -67,8 +67,8 @@ if st.session_state.result_folder_name == '' and 'image_folder_name' in st.sessi
     st.session_state.result_folder_name = st.session_state.image_folder_name
 if 'pre_generate_result' not in st.session_state:
     st.session_state.pre_generate_result = {}
-if 'resource_pack_service' not in st.session_state:
-    st.session_state.resource_pack_service = ResourcePackService()
+# if 'resource_pack_service' not in st.session_state:
+#     st.session_state.resource_pack_service = ResourcePackService()
 
 # api
 if 'api_key' not in st.session_state:
@@ -211,7 +211,7 @@ with st.sidebar:
                 cover_path = st.session_state.cropped_cover_path if pack_cover else None
                 
                 # 创建资源包
-                pack_dir = st.session_state.resource_pack_service.create_resource_pack(
+                pack_dir = ResourcePackService().create_resource_pack(
                     name=pack_name,
                     version=pack_version,
                     author=pack_author,
@@ -224,7 +224,7 @@ with st.sidebar:
                     
                 # 生成zip文件
                 try:
-                    zip_path = st.session_state.resource_pack_service.export_resource_pack(pack_dir)
+                    zip_path = ResourcePackService().export_resource_pack(pack_dir)
                     
                     # 提供zip文件下载
                     with open(zip_path, "rb") as f:
