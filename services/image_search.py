@@ -24,6 +24,7 @@ class ImageSearch:
 
     def __reload_class_cache(self):
         self.embedding_service = EmbeddingService()
+        self.resource_pack_manager = ResourcePackManager()
 
     def _try_load_cache(self) -> None:
         self.__reload_class_cache()
@@ -254,7 +255,6 @@ class ImageSearch:
         errors = []
         
         # 创建线程列表和线程锁
-        threads = []
         embedding_lock = threading.Lock()
         
         total_files = len(new_image_files)
@@ -313,17 +313,12 @@ class ImageSearch:
                                   embedding_name, image_type, pack_id, embedding_lock, errors)
                         )
                         thread.start()
-                        threads.append(thread)
                         
                 progress_bar.progress((index + 1) / total_files, text=f"处理 {pack_info['name']} 图片 {index + 1}/{total_files}")
                 
-                # 每处理150个文件，等待所有线程完成并保存一次缓存
-                if index % 150 == 0 and index > 0:
-                    # 等待所有线程完成
-                    for t in threads:
-                        t.join()
-                    threads = []  # 清空线程列表
-                    
+
+                if (index % 151 == 0 and index > 0 and
+                        time.time() - self.embedding_service.get_last_request_time() < 30):
                     # 保存中间缓存
                     if embeddings:
                         with embedding_lock:
@@ -338,10 +333,6 @@ class ImageSearch:
             except Exception as e:
                 print(f"生成嵌入失败 [{filepath}]: {str(e)}")
                 errors.append(f"[{filepath}] {str(e)}")
-        
-        # 等待所有剩余线程完成
-        for t in threads:
-            t.join()
                 
         # 保存最终缓存
         if embeddings:

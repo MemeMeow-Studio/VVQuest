@@ -64,7 +64,10 @@ class ResourcePackManager:
                             # 检查资源包是否有效
                             if not self._validate_resource_pack(pack_dir, manifest):
                                 continue
-                                
+
+                            resource_config = Config().resource_packs.get(f'pack_{item}', ResourcePackConfig())
+
+
                             # 获取封面图片路径
                             cover_path = None
                             if manifest.get("cover") and manifest["cover"].get("filename"):
@@ -79,7 +82,7 @@ class ResourcePackManager:
                             model_cache_dir = os.path.join(pack_dir, "model_cache")
                             verify_folder(model_cache_dir)
                             cache_file = os.path.join(model_cache_dir, "embeddings.pkl")
-                            
+
                             self.available_packs[pack_id] = {
                                 "name": manifest.get("name", item),
                                 "version": manifest.get("version", "1.0.0"),
@@ -88,12 +91,14 @@ class ResourcePackManager:
                                 "path": os.path.join(pack_dir, "images"),
                                 "type": "vv",  # 默认类型
                                 "cache_file": cache_file,
-                                "enabled": False,  # 默认不启用
+                                "enabled": resource_config.enabled,  # 默认不启用
                                 "is_default": False,
                                 "cover": cover_path,
                                 "manifest": manifest,
                                 "pack_dir": pack_dir
                             }
+                            if resource_config.enabled:
+                                self.enabled_packs[pack_id] = self.available_packs[pack_id]
                         except Exception as e:
                             print(f"加载资源包 {item} 失败: {str(e)}")
     
@@ -142,8 +147,8 @@ class ResourcePackManager:
             
             # 更新配置文件
             with Config() as config:
-                if "resource_packs" not in config.__dict__:
-                    config.resource_packs = {}
+                # if "resource_packs" not in config.__dict__:
+                #     config.resource_packs = {}
                 if pack_id not in config.resource_packs:
                     config.resource_packs[pack_id] = ResourcePackConfig(enabled=True)
                 else:
