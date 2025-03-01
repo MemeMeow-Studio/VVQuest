@@ -20,7 +20,7 @@ from services.resource_pack import ResourcePackService
 COVERS_DIR = os.path.join(Config().get_temp_path('covers'))
 # 封面图片尺寸
 COVER_SIZE = (512, 512)
-
+ITEMS_PER_PAGE = 30  # 每页显示的文件数
 st.set_page_config(
     page_title="LabelImages",
     page_icon="🌐",
@@ -233,14 +233,14 @@ if os.path.exists(st.session_state.image_folder_name):
     #     img_obj = img.copy()
     # img_obj = np.array(img_obj)
     # img_obj = resize_image(img_obj, 256)
-    st.image(img_path, width=256)
+    st.image(img_path, width=384)
 
     col3, col4, col5 = st.columns([1, 1, 1])
 
     with col3:
         st.button('使用VLM生成描述', on_click = onclick_use_vlm_generate)
 
-    """缓存处理"""
+    # 缓存处理
     if st.session_state.ai_pre_generate:
         for i in range(1,3):
             if st.session_state.image_index+i <= len(st.session_state.all_images_path)-1:
@@ -321,7 +321,7 @@ if os.path.exists(st.session_state.image_folder_name):
         if not search_term or search_term.lower() in filename.lower():
             filtered_files.append((idx, img_path))
     
-    ITEMS_PER_PAGE = 6  # 每页显示的文件数
+
     total_pages = max(1, (len(filtered_files) + ITEMS_PER_PAGE - 1) // ITEMS_PER_PAGE)
     
     if 'current_page' not in st.session_state:
@@ -372,8 +372,9 @@ if os.path.exists(st.session_state.image_folder_name):
     for i in range(start_idx, end_idx):
         original_idx, img_path = filtered_files[i]
         with st.container():
-            col1, col2 = st.columns([5, 1])
-            
+            col_img, col1, col2 = st.columns([1, 5, 1])
+            with col_img:
+                st.image(img_path, width=128)
             with col1:
                 filename = os.path.basename(img_path)
                 if original_idx == st.session_state.image_index:
