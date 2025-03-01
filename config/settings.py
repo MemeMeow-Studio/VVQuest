@@ -1,6 +1,7 @@
 import inspect
 import os, sys, shutil
 import threading
+from functools import cached_property
 from typing import Dict, List, Optional
 import yaml
 from pydantic import Field, BaseModel
@@ -265,6 +266,15 @@ class Config(BaseConfig):
     def get_label_images_cache_file(self) -> str:
         """获取缓存文件的绝对路径"""
         return os.path.join(self.base_dir,self.paths.label_images_cache_file)
+
+    @cached_property
+    def temp_dir(self) -> str:
+        return os.path.join(self.base_dir, 'temp')
+
+    def get_temp_path(self, name) -> str:
+        _p = os.path.join(self.temp_dir, name)
+        verify_folder(_p)
+        return _p
 
     def __getattr__(self, item):
         if 'keep_tracked' in self.__dict__ and self.__dict__['keep_tracked']:

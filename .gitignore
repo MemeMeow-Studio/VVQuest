@@ -9,3 +9,4 @@ config/config.yaml
 cache/
 export/*
 resource_packs/*
+temp/

@@ -107,8 +107,7 @@ with st.sidebar:
 
 
 
-CACHE_PATH = os.path.join(Config().base_dir, 'cache')
-verify_folder(CACHE_PATH)
+CACHE_PATH = os.path.join(Config().get_temp_path('upload_images_page'))
 
 if st.session_state.input_text:
     path = os.path.join(Config().base_dir, 'data', st.session_state.input_text)

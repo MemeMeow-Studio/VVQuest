@@ -17,24 +17,7 @@ from pages.utils import *
 from services.label_memes import LabelMemes
 from services.resource_pack import ResourcePackService
 
-COVERS_DIR = os.path.join(Config().get_abs_cover_cache_file())
-os.makedirs(COVERS_DIR, exist_ok=True)
-
-def cleanup_temp_covers():
-    """清理临时封面文件目录"""
-    try:
-        if os.path.exists(COVERS_DIR):
-            for filename in os.listdir(COVERS_DIR):
-                file_path = os.path.join(COVERS_DIR, filename)
-                try:
-                    if os.path.isfile(file_path):
-                        os.unlink(file_path)
-                except Exception as e:
-                    print(f"清理临时文件失败 {file_path}: {str(e)}")
-        print("临时封面文件清理完成")
-    except Exception as e:
-        print(f"清理临时目录失败: {str(e)}")
-
+COVERS_DIR = os.path.join(Config().get_temp_path('covers'))
 # 封面图片尺寸
 COVER_SIZE = (512, 512)
 
@@ -57,8 +40,6 @@ if 'new_file_name' not in st.session_state:
     st.session_state.new_file_name = ''
 if 'can_add_vlm_result_to_filename' not in st.session_state:
     st.session_state.can_add_vlm_result_to_filename = False
-if 'auto_generate_labels' not in st.session_state:  
-    st.session_state.auto_generate_labels = False
 if 'result_folder_name' not in st.session_state:
     st.session_state.result_folder_name = ''
 if st.session_state.result_folder_name == '' and 'image_folder_name' in st.session_state:
@@ -85,12 +66,6 @@ def onchange_folder_name():
     st.session_state.all_images_path = get_all_file_paths(st.session_state.image_folder_name, endwith=ENDWITH_IMAGE)
 
 
-def onclick_start_stop_auto_generate():
-    st.session_state.auto_generate_labels = not st.session_state.auto_generate_labels
-    if st.session_state.auto_generate_labels:
-        st.success('自动生成已启动')
-    else:
-        st.success('自动生成已停止')
 
 def onclick_use_vlm_generate():
     try:
@@ -198,7 +173,7 @@ with st.sidebar:
         st.session_state.cropped_cover_path = temp_cover
             
     export_disabled = not (pack_name and pack_version and pack_author)
-    export_help = "请填写必要信息" if export_disabled else "创建并下载资源包"
+    export_help = "请填写必要信息" if export_disabled else "创建并下载资源包" + " \n导出资源包会导出目标文件夹下所有图片和所有子文件夹下的所有图片"
     
     if st.button("导出资源包", disabled=export_disabled, help=export_help):
         try:
@@ -220,7 +195,6 @@ with st.sidebar:
                     cover_image=cover_path,
                     tags=tags
                 )
-                cleanup_temp_covers()
                     
                 # 生成zip文件
                 try:
@@ -293,10 +267,6 @@ if os.path.exists(st.session_state.image_folder_name):
                     if not name_list[index] == '':
                         st.button(f"添加 \"{name_list[index]}\" 到文件名", on_click=create_onc(index),key=f'generate_clicked_{index}')
 
-                    # auto mode
-                    if st.session_state.auto_generate_labels:
-                        if index in [0,1]:
-                            st.session_state.new_file_name += name_list[index]
         except Exception as e:
             st.error(f"VLM 生成描述失败: {str(e)}")
 
@@ -425,6 +395,3 @@ if os.path.exists(st.session_state.image_folder_name):
                     return jump
                     
                 st.button("跳转", key=f"jump_{original_idx}", on_click=create_jump_callback(original_idx))
-
-    if st.session_state.auto_generate_labels:
-        pass
