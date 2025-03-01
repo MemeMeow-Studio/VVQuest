@@ -3,6 +3,7 @@ import os
 import sys
 import requests
 import pickle
+import random
 from typing import List, Optional, Union
 import numpy as np
 import cv2
@@ -94,8 +95,8 @@ def calculate_image_similarity(img1, img2):
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
     similarity = max_val
 
-    if sys.gettrace() is not None:
-        print(similarity)
+    if DEBUG_MODE:
+        logger.trace(similarity)
     return similarity
 
 

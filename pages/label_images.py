@@ -111,7 +111,7 @@ with st.sidebar:
         options=get_image_dirs(),
         on_change=onchange_folder_name,
         key='image_folder_name',
-        help='可以在data/image_dirs下创建新的文件夹来保存图片。'
+        help='可以在data/image_dirs下创建新的文件夹来保存图片。'+" \n导出资源包会导出目标文件夹下所有图片和所有子文件夹下的所有图片"
     )
     st.checkbox('AI预生成',
                 key='ai_pre_generate',
@@ -173,7 +173,7 @@ with st.sidebar:
         st.session_state.cropped_cover_path = temp_cover
             
     export_disabled = not (pack_name and pack_version and pack_author)
-    export_help = "请填写必要信息" if export_disabled else "创建并下载资源包" + " \n导出资源包会导出目标文件夹下所有图片和所有子文件夹下的所有图片"
+    export_help = "请填写必要信息" if export_disabled else "创建并下载资源包"
     
     if st.button("导出资源包", disabled=export_disabled, help=export_help):
         try:

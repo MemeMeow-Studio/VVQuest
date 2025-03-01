@@ -8,6 +8,7 @@ import re
 from typing import Optional, List, Dict
 
 from config.settings import Config
+from pages.utils import ENDWITH_IMAGE
 
 from services.embedding_service import EmbeddingService
 from services.resource_pack_manager import ResourcePackManager
@@ -268,7 +269,7 @@ class ImageSearch:
                 filename = os.path.splitext(os.path.basename(filepath))[0]
                 full_filename = None
                 
-                for ext in ['.png', '.jpg', '.jpeg', '.gif']:
+                for ext in ENDWITH_IMAGE:
                     if os.path.exists(os.path.join(os.path.dirname(filepath), filename + ext)):
                         full_filename = filename + ext
                         break
@@ -377,7 +378,6 @@ class ImageSearch:
             return []
 
         similarities = []
-        exists_imgs_path = []
         for img in self.image_data:
             if 'filepath' not in img and Config().misc.adapt_for_old_version:
                 # 使用资源包的路径
@@ -393,15 +393,54 @@ class ImageSearch:
                 img['filepath'] = os.path.join(pack_path, img["filename"])
                 
             if os.path.exists(img['filepath']):
-                exists_imgs_path.append(img['filepath'])
-                similarity = self._cosine_similarity(query_embedding, img['embedding'])
-                similarities.append((similarity, img['filepath']))
+                # similarity = self._cosine_similarity(query_embedding, img['embedding'])
+                similarities.append(({
+                                         'path': img['filepath'],
+                                         'embedding_name': img['embedding_name'], },
+                                     self._cosine_similarity(query_embedding, img["embedding"])))
 
-        # 按相似度排序
-        similarities.sort(reverse=True)
-        
-        # 返回前top_k个结果
-        return [item[1] for item in similarities[:top_k]]
+        if not similarities:
+            return []
+
+        exists_imgs_path = []
+        # 按相似度降序排序并返回前top_k个结果
+        sorted_items = sorted(similarities, key=lambda x: x[1], reverse=True)
+        return_list = []
+        count = 0
+        for i in sorted_items:
+            if count >= top_k * 5:
+                break
+            if i[0]['path'] not in exists_imgs_path:
+                return_list.append(i[0])
+                exists_imgs_path.append(i[0]['path'])
+                count += 1
+
+        # 随机化输出 去除重复图片
+
+        skip_indexes = []
+        return_list_2 = []
+        for index, i in enumerate(return_list):
+            if len(return_list_2) >= top_k:
+                break
+            if index in skip_indexes:
+                continue
+            randomize_list = [i]
+            for jndex, j in enumerate(return_list[index + 1:]):
+                if i['embedding_name'] == j['embedding_name']:
+                    randomize_list.append(j)
+                    skip_indexes.append(index + jndex + 1)
+            if len(randomize_list) >= 2:
+                random.shuffle(randomize_list)
+                return_list_2 += [i['path'] for i in pop_similar_images(randomize_list)]
+            else:
+                return_list_2.append(i['path'])
+
+        return return_list_2
+        # # 按相似度排序
+        # similarities.sort(reverse=True)
+        #
+        # # 返回前top_k个结果
+        # return [item[1] for item in similarities[:top_k]]
         
     def reload_resource_packs(self) -> None:
         """重新加载资源包"""
@@ -445,7 +484,7 @@ def pop_similar_images(input_image_list, threshold=0.9):
     for index, img in enumerate(image_list):
 
         max_similar = 0
-        print(index)
+        logger.trace(index)
         for j in image_list[index+1:]:
             max_similar = max(max_similar, calculate_image_similarity(img['image'], j['image']))
         if max_similar < threshold:
