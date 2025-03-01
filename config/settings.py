@@ -1,12 +1,26 @@
 import inspect
 import os, sys, shutil
 import threading
+from functools import cached_property
 from typing import Dict, List, Optional
 import yaml
 from pydantic import Field, BaseModel
 import typing as t
 
 from config.utils import *
+
+
+"""
+修改配置：用with打开Config，修改后自动保存。可以修改多个配置。
+with Config() as config:
+    config.api.embedding_models.base_url = '123'
+使用配置：每次使用前实例化Config
+！！！注意：如果不重新实例化，config的值不会改变！！！
+应当将Config视为一次性的实例。如果要缓存这个实例，应当保证这个缓存在使用的生命周期内，config不会被改变。
+对于改不了的屎山代码，请在实例化Config时，将keep_tracked参数设置为True。注意：设置后，这个缓存将是只读的。
+
+每次重新实例化不会重新读盘。在内存中有一个缓存。
+"""
 
 CONFIG_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_FILE = os.path.join(CONFIG_DIR, 'config.yaml')
@@ -71,17 +85,17 @@ class BaseConfig(BaseModel, frozen=False, extra='allow'):
     #                 'value': value
     #             })
 
-class ObserverdDict(dict):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.__dict__['settled_dicts'] = []
-    def __setitem__(self, key, value):
-        print(f"setitem:{key}-{value}")
-        if not isinstance(value, BaseConfig):
-            self.__dict__['settled_dicts'].append({
-                'key': [key],
-                'value': value
-            })
+# class ObserverdDict(dict):
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         self.__dict__['settled_dicts'] = []
+#     def __setitem__(self, key, value):
+#         print(f"setitem:{key}-{value}")
+#         if not isinstance(value, BaseConfig):
+#             self.__dict__['settled_dicts'].append({
+#                 'key': [key],
+#                 'value': value
+#             })
 
 class EmbeddingModelConfig(BaseConfig):
     name: str
@@ -102,6 +116,7 @@ class PathsConfig(BaseConfig):
     models_dir: str
     api_embeddings_cache_file: str
     label_images_cache_file: str
+    resource_packs_dir: str = "resource_packs"
 
 class OpenaiConfig(BaseConfig):
     base_url: str
@@ -113,6 +128,12 @@ class ApiConfig(BaseConfig):
 
 class MiscConfig(BaseConfig):
     adapt_for_old_version: bool
+
+class ResourcePackConfig(BaseConfig):
+    enabled: bool = False
+    path: Optional[str] = None
+    type: Optional[str] = None
+    cache_file: Optional[str] = None
 
 def update_nested_dict(dictionary, keys, value):
     """
@@ -162,6 +183,7 @@ class Config(BaseConfig):
     models: ModelsConfig
     paths: PathsConfig
     misc: MiscConfig
+    resource_packs: Dict[str, ResourcePackConfig] = {}
 
     # CONFIG_SOURCES = [
     #     FileSource(
@@ -171,21 +193,25 @@ class Config(BaseConfig):
 
 
 
-    def __init__(self):
-        if sys.gettrace() is not None:
+    def __init__(self, keep_tracked = False):
+        if TRACE_MODE is not None:
             frame = inspect.currentframe().f_back
             filename = frame.f_code.co_filename
             lineno = frame.f_lineno
-            print(f"Config 类在 {frame.f_code.co_name} 被实例化。")
+            logger.trace(f"Config 类在 {frame.f_code.co_name} 被实例化。")
         data = config_cache.get_config()
         if not data:
-            if sys.gettrace() is not None:
-                print('loading config')
+            if TRACE_MODE:
+                logger.trace('Loading config')
             data = load_yaml_file(CONFIG_FILE)
             config_cache.set_config(data)
+        if keep_tracked:
+            self.__dict__['keep_tracked'] = True
         super().__init__(**data)
 
     def __enter__(self):
+        if 'keep_tracked' in self.__dict__ and self.__dict__['keep_tracked']:
+            raise RuntimeError('Config object is being tracked, which cannot be modified.')
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -203,7 +229,6 @@ class Config(BaseConfig):
 
     # def __del__(self):
     #     print('Config object is being deleted')
-
 
 
     @property
@@ -242,6 +267,21 @@ class Config(BaseConfig):
         """获取缓存文件的绝对路径"""
         return os.path.join(self.base_dir,self.paths.label_images_cache_file)
 
+    @cached_property
+    def temp_dir(self) -> str:
+        return os.path.join(self.base_dir, 'temp')
+
+    def get_temp_path(self, name) -> str:
+        _p = os.path.join(self.temp_dir, name)
+        verify_folder(_p)
+        return _p
+
+    def __getattr__(self, item):
+        if 'keep_tracked' in self.__dict__ and self.__dict__['keep_tracked']:
+            return Config().__getattr__(item)
+        else:
+            return super().__getattr__(item)
+
     # def reload(self) -> None:
     #     """重新加载配置文件"""
     #     new_config = Config()
@@ -259,5 +299,7 @@ if __name__ == '__main__':
     with Config() as config:
         config.api.embedding_models.base_url = '123'
     """使用配置：每次使用前实例化Config"""
+    """注意：如果不重新实例化，config的值不会改变！应当将Config视为一次新的实例。如果要缓存这个实例，应当保证config缓存在使用的生命周期内不会改变。"""
     print(Config().api.embedding_models.base_url)
+
 

@@ -3,19 +3,12 @@ import os
 import sys
 import requests
 import pickle
+import random
 from typing import List, Optional, Union
 import numpy as np
 import cv2
+from base import *
 
-def verify_folder(root):
-    if '.' in os.path.basename(root):
-        root = os.path.dirname(root)
-    if not os.path.exists(root):
-        parent = os.path.dirname(root)
-        if parent != root:  # 防止在根目录时无限递归
-            verify_folder(parent)
-        os.makedirs(root, exist_ok=True)
-        print(f"dir {root} has been created")
 
 
 
@@ -102,8 +95,8 @@ def calculate_image_similarity(img1, img2):
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
     similarity = max_val
 
-    if sys.gettrace() is not None:
-        print(similarity)
+    if DEBUG_MODE:
+        logger.trace(similarity)
     return similarity
 
 

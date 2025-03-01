@@ -36,3 +36,10 @@ paths:
       path: data/images
       type: vv
   models_dir: data/models
+  resource_packs_dir: resource_packs
+resource_packs:
+  default_pack:
+    enabled: true
+    path: data/images
+    type: vv
+    cache_file: data/embeddings.pkl

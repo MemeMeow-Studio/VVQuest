@@ -142,7 +142,15 @@ python -m streamlit run app.py
 > [!TIP]
 > 你可以在 [Issues](https://github.com/DanielZhangyc/VVQuest/issues) 中分享你的资源包，或者查看其他用户分享的资源包。
 
-### 导入资源包 (WIP)
+### 导入资源包 
+在主界面，点击管理资源包，点击导入资源包，选择资源包，点击导入。
+> [!CAUTION]
+> 导入资源包后，需要重新生成缓存。
+
+> [!CAUTION]
+> 新版本查找图片不再从config读取。为了从旧版本迁移，请在label images选择你的图片文件夹，选择导出资源包，然后再导入VVQuest。
+
+
 
 <a id="-api"></a>
 ## 🔌 API

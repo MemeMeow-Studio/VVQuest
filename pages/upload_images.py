@@ -107,8 +107,7 @@ with st.sidebar:
 
 
 
-CACHE_PATH = os.path.join(Config().base_dir, 'cache')
-verify_folder(CACHE_PATH)
+CACHE_PATH = os.path.join(Config().get_temp_path('upload_images_page'))
 
 if st.session_state.input_text:
     path = os.path.join(Config().base_dir, 'data', st.session_state.input_text)
@@ -141,25 +140,29 @@ if uploaded_images:
         except Exception as e:
             img_name = f'{datetime.datetime.now()}.gif'
         # 使用 PIL 打开图片并显示
-        img = Image.open(uploaded_image)
-        show_image_area.image(img, caption=uploaded_image.name, width=200)
-        cache_path = os.path.join(CACHE_PATH, img_name)
-        if img.mode == 'P': #TODO: 检查这行代码是否不需要
-            img = img.convert('RGB')
-        img.save(os.path.join(cache_path))
-        # 生成图片描述
-        if st.session_state.auto_generate_labels:
-            res = label_image(cache_path, show_result_area)
-            if res:
-                img_name = res + os.path.splitext(img_name)[1]
-
-        # 保存上传的图片到指定文件夹
-        save_image_path = os.path.join(st.session_state.image_folder_name,img_name )
-        if os.path.exists(save_image_path):
-            show_result_area.error(f'图片 {save_image_path} 已存在')
-        else:
-            if img.mode == 'P':
+        try:
+            img = Image.open(uploaded_image)
+            show_image_area.image(img, caption=uploaded_image.name, width=200)
+            cache_path = os.path.join(CACHE_PATH, img_name)
+            if img.mode == 'P': #TODO: 检查这行代码是否不需要
                 img = img.convert('RGB')
-            img.save(save_image_path)
-            show_result_area.success(f'图片 {save_image_path} 已保存')
+            img.save(os.path.join(cache_path))
+            # 生成图片描述
+            if st.session_state.auto_generate_labels:
+                res = label_image(cache_path, show_result_area)
+                if res:
+                    img_name = res + os.path.splitext(img_name)[1]
+
+            # 保存上传的图片到指定文件夹
+            save_image_path = os.path.join(st.session_state.image_folder_name,img_name )
+            if os.path.exists(save_image_path):
+                show_result_area.error(f'图片 {save_image_path} 已存在')
+            else:
+                if img.mode == 'P':
+                    img = img.convert('RGB')
+                img.save(save_image_path)
+                show_result_area.success(f'图片 {save_image_path} 已保存')
+        except Exception as e:
+            logger.exception(e)
+            show_result_area.error(f'图片 {uploaded_image.name} 保存失败: {e}')
     uploaded_images = [] # 这行代码没用，那个组件仍然会保存已上传的文件

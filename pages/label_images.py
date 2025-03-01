@@ -17,27 +17,10 @@ from pages.utils import *
 from services.label_memes import LabelMemes
 from services.resource_pack import ResourcePackService
 
-COVERS_DIR = os.path.join(Config().get_abs_cover_cache_file())
-os.makedirs(COVERS_DIR, exist_ok=True)
-
-def cleanup_temp_covers():
-    """清理临时封面文件目录"""
-    try:
-        if os.path.exists(COVERS_DIR):
-            for filename in os.listdir(COVERS_DIR):
-                file_path = os.path.join(COVERS_DIR, filename)
-                try:
-                    if os.path.isfile(file_path):
-                        os.unlink(file_path)
-                except Exception as e:
-                    print(f"清理临时文件失败 {file_path}: {str(e)}")
-        print("临时封面文件清理完成")
-    except Exception as e:
-        print(f"清理临时目录失败: {str(e)}")
-
+COVERS_DIR = os.path.join(Config().get_temp_path('covers'))
 # 封面图片尺寸
 COVER_SIZE = (512, 512)
-
+ITEMS_PER_PAGE = 30  # 每页显示的文件数
 st.set_page_config(
     page_title="LabelImages",
     page_icon="🌐",
@@ -50,15 +33,13 @@ if 'image_folder_name' not in st.session_state:
 if 'image_index' not in st.session_state:
     st.session_state.image_index = 0
 if 'all_images_path' not in st.session_state:
-    st.session_state.all_images_path = get_all_file_paths('data/images')  # 初始化图片列表
+    st.session_state.all_images_path = get_all_file_paths('data/images', endwith=ENDWITH_IMAGE)  # 初始化图片列表
 if 'label_meme_obj' not in st.session_state:
     st.session_state.label_meme_obj = LabelMemes()
 if 'new_file_name' not in st.session_state:
     st.session_state.new_file_name = ''
 if 'can_add_vlm_result_to_filename' not in st.session_state:
     st.session_state.can_add_vlm_result_to_filename = False
-if 'auto_generate_labels' not in st.session_state:  
-    st.session_state.auto_generate_labels = False
 if 'result_folder_name' not in st.session_state:
     st.session_state.result_folder_name = ''
 if st.session_state.result_folder_name == '' and 'image_folder_name' in st.session_state:
@@ -67,8 +48,8 @@ if st.session_state.result_folder_name == '' and 'image_folder_name' in st.sessi
     st.session_state.result_folder_name = st.session_state.image_folder_name
 if 'pre_generate_result' not in st.session_state:
     st.session_state.pre_generate_result = {}
-if 'resource_pack_service' not in st.session_state:
-    st.session_state.resource_pack_service = ResourcePackService()
+# if 'resource_pack_service' not in st.session_state:
+#     st.session_state.resource_pack_service = ResourcePackService()
 
 # api
 if 'api_key' not in st.session_state:
@@ -82,15 +63,9 @@ if 'base_url' not in st.session_state:
 
 def onchange_folder_name():
     st.session_state.image_index = 0
-    st.session_state.all_images_path = get_all_file_paths(st.session_state.image_folder_name)
+    st.session_state.all_images_path = get_all_file_paths(st.session_state.image_folder_name, endwith=ENDWITH_IMAGE)
 
 
-def onclick_start_stop_auto_generate():
-    st.session_state.auto_generate_labels = not st.session_state.auto_generate_labels
-    if st.session_state.auto_generate_labels:
-        st.success('自动生成已启动')
-    else:
-        st.success('自动生成已停止')
 
 def onclick_use_vlm_generate():
     try:
@@ -136,7 +111,7 @@ with st.sidebar:
         options=get_image_dirs(),
         on_change=onchange_folder_name,
         key='image_folder_name',
-        help='可以在data/image_dirs下创建新的文件夹来保存图片。'
+        help='可以在data/image_dirs下创建新的文件夹来保存图片。'+" \n导出资源包会导出目标文件夹下所有图片和所有子文件夹下的所有图片"
     )
     st.checkbox('AI预生成',
                 key='ai_pre_generate',
@@ -211,7 +186,7 @@ with st.sidebar:
                 cover_path = st.session_state.cropped_cover_path if pack_cover else None
                 
                 # 创建资源包
-                pack_dir = st.session_state.resource_pack_service.create_resource_pack(
+                pack_dir = ResourcePackService().create_resource_pack(
                     name=pack_name,
                     version=pack_version,
                     author=pack_author,
@@ -220,11 +195,10 @@ with st.sidebar:
                     cover_image=cover_path,
                     tags=tags
                 )
-                cleanup_temp_covers()
                     
                 # 生成zip文件
                 try:
-                    zip_path = st.session_state.resource_pack_service.export_resource_pack(pack_dir)
+                    zip_path = ResourcePackService().export_resource_pack(pack_dir)
                     
                     # 提供zip文件下载
                     with open(zip_path, "rb") as f:
@@ -259,14 +233,14 @@ if os.path.exists(st.session_state.image_folder_name):
     #     img_obj = img.copy()
     # img_obj = np.array(img_obj)
     # img_obj = resize_image(img_obj, 256)
-    st.image(img_path, width=256)
+    st.image(img_path, width=384)
 
     col3, col4, col5 = st.columns([1, 1, 1])
 
     with col3:
         st.button('使用VLM生成描述', on_click = onclick_use_vlm_generate)
 
-    """缓存处理"""
+    # 缓存处理
     if st.session_state.ai_pre_generate:
         for i in range(1,3):
             if st.session_state.image_index+i <= len(st.session_state.all_images_path)-1:
@@ -288,15 +262,11 @@ if os.path.exists(st.session_state.image_folder_name):
                 with i:
                     def create_onc(inner_index):
                         def onc():
-                            st.session_state.new_file_name += name_list[inner_index]
+                            st.session_state.new_file_name += f'{name_list[inner_index]}-'
                         return onc
                     if not name_list[index] == '':
                         st.button(f"添加 \"{name_list[index]}\" 到文件名", on_click=create_onc(index),key=f'generate_clicked_{index}')
 
-                    # auto mode
-                    if st.session_state.auto_generate_labels:
-                        if index in [0,1]:
-                            st.session_state.new_file_name += name_list[index]
         except Exception as e:
             st.error(f"VLM 生成描述失败: {str(e)}")
 
@@ -351,7 +321,7 @@ if os.path.exists(st.session_state.image_folder_name):
         if not search_term or search_term.lower() in filename.lower():
             filtered_files.append((idx, img_path))
     
-    ITEMS_PER_PAGE = 6  # 每页显示的文件数
+
     total_pages = max(1, (len(filtered_files) + ITEMS_PER_PAGE - 1) // ITEMS_PER_PAGE)
     
     if 'current_page' not in st.session_state:
@@ -402,8 +372,9 @@ if os.path.exists(st.session_state.image_folder_name):
     for i in range(start_idx, end_idx):
         original_idx, img_path = filtered_files[i]
         with st.container():
-            col1, col2 = st.columns([5, 1])
-            
+            col_img, col1, col2 = st.columns([1, 5, 1])
+            with col_img:
+                st.image(img_path, width=128)
             with col1:
                 filename = os.path.basename(img_path)
                 if original_idx == st.session_state.image_index:
@@ -425,6 +396,3 @@ if os.path.exists(st.session_state.image_folder_name):
                     return jump
                     
                 st.button("跳转", key=f"jump_{original_idx}", on_click=create_jump_callback(original_idx))
-
-    if st.session_state.auto_generate_labels:
-        pass

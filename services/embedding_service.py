@@ -18,6 +18,7 @@ import threading
 
 class EmbeddingService:
     def __init__(self):
+        self.config = Config(keep_tracked=True)
         self.api_key = Config().api.embedding_models.api_key
         self.base_url = Config().api.embedding_models.base_url
         self.local_models = {}
