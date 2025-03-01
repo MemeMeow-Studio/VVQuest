@@ -2,13 +2,19 @@ import os
 
 import cv2
 from config.settings import Config
+ENDWITH_IMAGE = ['.jpg', '.jpeg', '.png', '.gif']
 
-def get_all_file_paths(folder_path):
+
+
+def get_all_file_paths(folder_path, endwith=None):
     # 用于存储所有文件的绝对路径
     file_paths = []
     # 使用os.walk()遍历文件夹及其子文件夹
     for root, directories, files in os.walk(folder_path):
         for filename in files:
+            if endwith:
+                if not os.path.splitext(os.path.basename(filename))[1] in endwith:
+                    continue
             # 构建文件的绝对路径
             file_path = os.path.join(root, filename)
             # 将绝对路径添加到列表中

@@ -50,7 +50,7 @@ if 'image_folder_name' not in st.session_state:
 if 'image_index' not in st.session_state:
     st.session_state.image_index = 0
 if 'all_images_path' not in st.session_state:
-    st.session_state.all_images_path = get_all_file_paths('data/images')  # 初始化图片列表
+    st.session_state.all_images_path = get_all_file_paths('data/images', endwith=ENDWITH_IMAGE)  # 初始化图片列表
 if 'label_meme_obj' not in st.session_state:
     st.session_state.label_meme_obj = LabelMemes()
 if 'new_file_name' not in st.session_state:
@@ -82,7 +82,7 @@ if 'base_url' not in st.session_state:
 
 def onchange_folder_name():
     st.session_state.image_index = 0
-    st.session_state.all_images_path = get_all_file_paths(st.session_state.image_folder_name)
+    st.session_state.all_images_path = get_all_file_paths(st.session_state.image_folder_name, endwith=ENDWITH_IMAGE)
 
 
 def onclick_start_stop_auto_generate():
