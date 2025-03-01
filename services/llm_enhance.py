@@ -15,7 +15,7 @@ class LLMEnhance:
         self.llm = ChatOpenAI(
     api_key=Config().api.embedding_models.api_key,
     base_url="https://api.siliconflow.cn/v1",
-    model_name='deepseek-ai/DeepSeek-R1-Distill-Qwen-7B'
+    model_name='Qwen/Qwen2.5-7B-Instruct'
 )
 
     def search(self, target):
