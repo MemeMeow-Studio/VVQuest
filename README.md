@@ -183,8 +183,8 @@ VVQuest 相关应用:
 | 应用 | 作者   | GitHub | 链接 |
 | --- | --- | --- | --- |
 | VVQuest网页端 |  | [VVQuest](https://github.com/DanielZhangyc/VVQuest) | [链接](https://zvv.quest) |
-| VVQuest iOS捷径 | [TomSmith163](https://github.com/TomSmith163) |  | [链接](https://www.icloud.com/shortcuts/e6b0bd4c1b4c4b5195ff4e256fb009f8) |
-
+| VVQuest*iOS*捷径 | [TomSmith163](https://github.com/TomSmith163) |  | [链接](https://www.icloud.com/shortcuts/a7084c7ae29e4de5898ce7c8386705f3) |
+| HakuBot().vv() 命令 | [apple_catwaii](https://github.com/Apple-QAQ) |  | [链接](https://qm.qq.com/cgi-bin/qm/qr?k=GJSCe1_B98V4Ni6leVtKAjQrAtJW-VG5 ) |
 
 > [!TIP]
 > 如果你想添加你的应用，请提交 [PR](https://github.com/DanielZhangyc/VVQuest/pulls) 或 [Issue](https://github.com/DanielZhangyc/VVQuest/issues)
