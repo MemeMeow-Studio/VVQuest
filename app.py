@@ -7,7 +7,7 @@ import os
 import yaml
 from services.image_search import ImageSearch
 from config.settings import Config
-from utils import *
+from base import *
 from loguru import logger
 
 logger.remove(handler_id=None)

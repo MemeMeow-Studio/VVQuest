@@ -12,6 +12,7 @@ from config.settings import Config
 from services.embedding_service import EmbeddingService
 from services.resource_pack_manager import ResourcePackManager
 from services.utils import *
+from services.llm_enhance import LLMEnhance
 
 
 class ImageSearch:
@@ -19,6 +20,7 @@ class ImageSearch:
         self.embedding_service = EmbeddingService()
         self.embedding_service.set_mode(mode, model_name)
         self.resource_pack_manager = ResourcePackManager()
+        self.llm_enhance = LLMEnhance()
         self.image_data = None
         self._try_load_cache()
 
@@ -355,8 +357,15 @@ class ImageSearch:
         """余弦相似度计算"""
         return np.dot(a, b)
 
-    def search(self, query: str, top_k: int = 5, api_key: Optional[str] = None) -> List[str]:
+    def search(self,
+               query: str,
+               top_k: int = 5,
+               api_key: Optional[str] = None,
+               use_llm: bool = False) -> List[str]:
         self.__reload_class_cache()
+        if use_llm:
+            query = self.llm_enhance.search(query)
+
         """语义搜索最匹配的图片"""
         if not self.has_cache():
             return []

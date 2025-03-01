@@ -2,6 +2,7 @@ from langchain.chat_models import init_chat_model
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.tools import tool
 from duckduckgo_search import DDGS
+from base import *
 from config.settings import Config
 
 # 定义搜索工具
@@ -21,9 +22,11 @@ tools = [get_web_data]
 llm_with_tools = model.bind_tools(tools)
 
 # 用户查询
-query = "如何评价马嘉祺"
-messages = [SystemMessage("你是一位表情包搜索辅助专家。用户会输入一句话，你需要分析用户的输入，分析其中的性质，把它拆解为几个关键词，用于搜索表情包。\
-如果用户的输入中有你不认识的词，请使用工具联网搜索。尽量不要输出没有意义的关键词，例如“评论”，“内容”，这些关键词无法寻找到对应的表情包。你应该思考什么关键词容易搜索到表情包。\
+query = "母鸡卡第八集"
+messages = [SystemMessage("\
+你是一位表情包搜索辅助专家。用户会输入一句话，你需要分析用户的输入，分析其中的性质，把它拆解为几个关键词，用于搜索表情包。\
+你有联网搜索的工具。请使用工具联网搜索，确保更准确的回答。\
+尽量不要输出没有意义的关键词，例如“评论”，“内容”，这些关键词无法寻找到对应的表情包。你应该思考什么关键词容易搜索到表情包。\
 例如，如果用户输入“积极评价黑神话悟空”，你应该输出[黑神话悟空，西游记，孙悟空，游戏，积极评价，赞扬]")
     , HumanMessage(query)]
 

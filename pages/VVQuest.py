@@ -71,6 +71,8 @@ if 'show_resource_packs' not in st.session_state:
     st.session_state.show_resource_packs = False
 if 'upload_file_key' not in st.session_state:
     st.session_state.upload_file_key = int(time.time()*100)
+if 'enable_llm_enhance' not in st.session_state:
+    st.session_state.enable_llm_enhance = False
 
 # 搜索函数
 def search():
@@ -83,7 +85,8 @@ def search():
             results = st.session_state.search_engine.search(
                 st.session_state.search_query, 
                 st.session_state.n_results,
-                st.session_state.embedding_api_key if st.session_state.mode == 'api' else None
+                st.session_state.embedding_api_key if st.session_state.mode == 'api' else None,
+                st.session_state.enable_llm_enhance
             )
             st.session_state.results = results if results else []
             return st.session_state.results
@@ -424,6 +427,9 @@ with st.sidebar:
         key="n_results_widget",
         on_change=on_slider_change
     )
+
+    st.checkbox("启用llm搜索增强",
+                key='enable_llm_enhance')
 
 # 主区域显示搜索结果
 if 'results' in st.session_state and st.session_state.results:

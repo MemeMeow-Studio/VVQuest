@@ -4,6 +4,7 @@ from config.settings import Config
 from openai import OpenAI
 import time
 import re
+from loguru import logger
 
 def normalize_newlines(content: str) -> str:
     """将文本中连续的多个换行符替换为单个换行符"""
@@ -52,7 +53,8 @@ def extract_web_content(urls):
             content = normalize_newlines(content)
             all_content.append({"url": url, "content": content})
         except Exception as e:
-            print(f"提取网页内容时出错 {url}: {e}")
+            logger.exception(e)
+            logger.error(f"提取网页内容时出错 {url}: {e}")
     return all_content
 
 def search_and_extract(keyword, num_results=10):
