@@ -3,7 +3,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.tools import tool
 from duckduckgo_search import DDGS
 from langchain_openai import ChatOpenAI
-from util import *
+from base import *
 from config.settings import Config
 def get_web_data(query: str) -> str:
     """使用DuckDuckGo搜索引擎进行搜索"""

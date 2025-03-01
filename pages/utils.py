@@ -2,6 +2,7 @@ import os
 
 import cv2
 from config.settings import Config
+from base import *
 ENDWITH_IMAGE = ['.jpg', '.jpeg', '.png', '.gif']
 
 
