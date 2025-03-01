@@ -11,3 +11,4 @@ pyyaml
 pillow
 openai
 streamlit_cropper
+loguru

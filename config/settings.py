@@ -194,15 +194,15 @@ class Config(BaseConfig):
 
 
     def __init__(self, keep_tracked = False):
-        if sys.gettrace() is not None:
+        if TRACE_MODE is not None:
             frame = inspect.currentframe().f_back
             filename = frame.f_code.co_filename
             lineno = frame.f_lineno
-            print(f"Config 类在 {frame.f_code.co_name} 被实例化。")
+            logger.trace(f"Config 类在 {frame.f_code.co_name} 被实例化。")
         data = config_cache.get_config()
         if not data:
-            if sys.gettrace() is not None:
-                print('loading config')
+            if TRACE_MODE:
+                logger.trace('Loading config')
             data = load_yaml_file(CONFIG_FILE)
             config_cache.set_config(data)
         if keep_tracked:
