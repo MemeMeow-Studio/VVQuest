@@ -9,4 +9,5 @@ config/config.yaml
 cache/
 export/*
 resource_packs/*
+!resource_packs/默认资源包/
 temp/
