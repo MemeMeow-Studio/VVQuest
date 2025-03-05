@@ -21,7 +21,10 @@ class ImageSearch:
         self.embedding_service = EmbeddingService()
         self.embedding_service.set_mode(mode, model_name)
         self.resource_pack_manager = ResourcePackManager()
-        self.llm_enhance = LLMEnhance()
+        try:
+            self.llm_enhance = LLMEnhance()
+        except:
+            self.llm_enhance = None
         self.image_data = None
         self._try_load_cache()
 
@@ -312,6 +315,8 @@ class ImageSearch:
                use_llm: bool = False) -> List[str]:
         self.__reload_class_cache()
         if use_llm:
+            if self.llm_enhance is None:
+                self.llm_enhance = LLMEnhance()
             query = self.llm_enhance.search(query)
 
         """语义搜索最匹配的图片"""

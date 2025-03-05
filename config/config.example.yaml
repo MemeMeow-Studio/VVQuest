@@ -1,10 +1,10 @@
 api:
   embedding_models:
     base_url: https://api.siliconflow.com/v1
-    api_key: 
+    api_key: ''
   vlm_models:
     base_url: https://api.siliconflow.com/v1
-    api_key: 
+    api_key: ''
 misc:
   adapt_for_old_version: true
 models:
@@ -38,8 +38,8 @@ paths:
   models_dir: data/models
   resource_packs_dir: resource_packs
 resource_packs:
-  default_pack:
+  pack_default_pack:
     enabled: true
-    path: data/images
+    path: null
     type: vv
-    cache_file: data/embeddings.pkl
+    cache_file: null
