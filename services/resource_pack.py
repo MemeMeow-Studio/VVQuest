@@ -6,7 +6,8 @@ from datetime import datetime
 from typing import List, Dict, Optional
 
 from config.settings import Config
-from .utils import verify_folder, get_file_hash
+from .utils import verify_folder, get_file_hash, download_file
+
 
 class ResourcePackError(Exception):
     """TODO: 资源包相关错误处理"""
@@ -107,7 +108,7 @@ class ResourcePackService:
                 print(f"复制文件: {img_path} -> {new_path}")
                 copied_files.append(new_path)
                 file_mapping[new_name] = {
-                    "original_name": original_name,
+                    "filepath": os.path.join("images/", new_name),
                     "hash": file_hash
                 }
             except Exception as e:
@@ -126,7 +127,6 @@ class ResourcePackService:
             "cover": cover_info,
             "contents": {
                 "images": {
-                    "path": "images/",
                     "description": "图像资源目录",
                     "files": file_mapping
                 }
@@ -190,3 +190,11 @@ class ResourcePackService:
             print(f"成功解压 {zip_file.name} 到 {target_dir}")
         except Exception as e:
             raise ResourcePackError(f"解压ZIP文件失败: {str(e)}")
+
+    def import_resource_pack_from_url(self, url):
+        target_file  = url.replace("https://", "").replace("http://", "").replace("/", "_").replace("\\", "_")
+        target_dir = os.path.join(Config().paths.resource_packs_dir, os.path.splitext(target_file)[0])
+        verify_folder(target_dir)
+        return download_file(url, os.path.join(target_dir, "manifest.json"))
+
+

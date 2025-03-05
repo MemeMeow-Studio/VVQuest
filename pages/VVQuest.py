@@ -73,6 +73,8 @@ if 'upload_file_key' not in st.session_state:
     st.session_state.upload_file_key = int(time.time()*100)
 if 'enable_llm_enhance' not in st.session_state:
     st.session_state.enable_llm_enhance = False
+if "pack_url" not in st.session_state:
+    st.session_state.pack_url = ""
 
 # 搜索函数
 def search():
@@ -291,7 +293,7 @@ with st.sidebar:
         st.subheader("资源包管理")
 
         # 加载资源包
-        files = st.file_uploader("导入资源包",
+        files = st.file_uploader("导入本地资源包",
                          type=["zip"],
                                  accept_multiple_files=True,
                                  key=st.session_state.upload_file_key)
@@ -301,6 +303,14 @@ with st.sidebar:
                 ResourcePackService().import_resource_pack(file)
                 st.success(f"导入资源包 {file.name} 成功")
             st.session_state.upload_file_key = int(time.time()*100)
+        if st.button("导入在线资源包"):
+            st.text_input("请输入资源包URL", key="pack_url")
+        if st.session_state.pack_url:
+            if ResourcePackService().import_resource_pack_from_url(st.session_state.pack_url):
+                st.success(f"导入资源包 {st.session_state.pack_url} 成功")
+            else:
+                st.error(f"导入资源包 {st.session_state.pack_url} 失败")
+            st.session_state.pack_url = ""
         # 重新加载资源包按钮
         st.button(
             "重新扫描资源包",

@@ -102,4 +102,33 @@ def calculate_image_similarity(img1, img2):
 
 
 
+import requests
+import os
 
+def download_file(url, save_path, ignore_ssl=True):
+    """
+    下载指定链接的文件到指定目录，可选择忽略 SSL 验证。
+
+    :param url: 文件的下载链接
+    :param save_path: 文件保存的路径
+    :param ignore_ssl: 是否忽略 SSL 验证，默认为 True
+    :return: 如果下载成功返回 True，否则返回 False
+    """
+    try:
+        # 创建保存文件的目录
+        verify_folder(save_path)
+        url = url.replace('\\\\', '/').replace('\\', '/')
+        # 发送请求
+        response = requests.get(url, verify=not ignore_ssl)
+        # 检查响应状态码
+        response.raise_for_status()
+        # 将文件内容写入指定路径
+        with open(save_path, 'wb') as file:
+            file.write(response.content)
+        return True
+    except requests.RequestException as e:
+        print(f"下载文件时发生错误: {e}")
+        return False
+    except Exception as e:
+        print(f"发生未知错误: {e}")
+        return False
