@@ -12,3 +12,6 @@ pillow
 openai
 streamlit_cropper
 loguru
+langchain
+langchain_openai
+duckduckgo_search
