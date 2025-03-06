@@ -10,3 +10,4 @@ cache/
 export/*
 resource_packs/*
 temp/
+Logs/
