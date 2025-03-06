@@ -1,21 +1,21 @@
 <div align="center">
 
 <pre align="center">
-██╗   ██╗██╗   ██╗ ██████╗ ██╗   ██╗███████╗███████╗████████╗
-██║   ██║██║   ██║██╔═══██╗██║   ██║██╔════╝██╔════╝╚══██╔══╝
-██║   ██║██║   ██║██║   ██║██║   ██║█████╗  ███████╗   ██║   
-╚██╗ ██╔╝╚██╗ ██╔╝██║▄▄ ██║██║   ██║██╔══╝  ╚════██║   ██║   
- ╚████╔╝  ╚████╔╝ ╚██████╔╝╚██████╔╝███████╗███████║   ██║   
-  ╚═══╝    ╚═══╝   ╚══▀▀═╝  ╚═════╝ ╚══════╝╚══════╝   ╚═╝   
+███╗   ███╗███████╗███╗   ███╗███████╗███╗   ███╗███████╗ ██████╗ ██╗    ██╗
+████╗ ████║██╔════╝████╗ ████║██╔════╝████╗ ████║██╔════╝██╔═══██╗██║    ██║
+██╔████╔██║█████╗  ██╔████╔██║█████╗  ██╔████╔██║█████╗  ██║   ██║██║ █╗ ██║
+██║╚██╔╝██║██╔══╝  ██║╚██╔╝██║██╔══╝  ██║╚██╔╝██║██╔══╝  ██║   ██║██║███╗██║
+██║ ╚═╝ ██║███████╗██║ ╚═╝ ██║███████╗██║ ╚═╝ ██║███████╗╚██████╔╝╚███╔███╔╝
+╚═╝     ╚═╝╚══════╝╚═╝     ╚═╝╚══════╝╚═╝     ╚═╝╚══════╝ ╚═════╝  ╚══╝╚══╝ 
 </pre>
 
 _✨ 通过自然语言检索表情包 ✨_
 
-[在线体验](https://zvv.quest) · [反馈问题](https://github.com/DanielZhangyc/VVQuest/issues) · [参与贡献](https://github.com/DanielZhangyc/VVQuest/pulls)
+[在线体验](https://zvv.quest) · [反馈问题](https://github.com/MemeMeow-Studio/MemeMeow/issues) · [参与贡献](https://github.com/MemeMeow-Studio/MemeMeow/pulls)
 
-[![License](https://img.shields.io/github/license/DanielZhangyc/VVQuest)](LICENSE)
+[![License](https://img.shields.io/github/license/MemeMeow-Studio/MemeMeow)](LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org)
-[![Online Demo](https://img.shields.io/website?url=https%3A%2F%2Fvv.xy0v0.top&up_message=online&down_message=offline&label=demo)](https://zvv.quest)
+[![Online Demo](https://img.shields.io/website?url=https%3A%2F%2Fmememeow.studio&up_message=online&down_message=offline&label=demo)](https://mememeow.studio)
 
 ---
 
@@ -37,11 +37,13 @@ _✨ 通过自然语言检索表情包 ✨_
 > 本项目返回表情包结果由AI生成，与本人观点无关。
 
 - **自然语言处理**: 采用嵌入模型，实现 Q&A 式的检索，能够对给出问题自动使用表情包回应。
-- **高拓展性**: 可结合 VLM 高效为图片打上标签，制作资源包并在 [Issues](https://github.com/DanielZhangyc/VVQuest/issues) 中分享。
+- **高拓展性**: 可结合 VLM 高效为图片打上标签，制作资源包并在 [Issues](https://github.com/MemeMeow-Studio/MemeMeow/issues) 中分享。
 - **便捷使用**: 提供现成的web（无法导入资源包），API使用，以及iOS捷径使用，可不用部署到本地。
+- **社区驱动**：能够在社区(WIP)分享自己制作的表情包资源包！
 - 另外，**单纯使用检索功能**，若使用API无需任何花费💰
 
-VVQuest 是一个基于自然语言的表情包检索工具。它能让你通过描述想要的场景，快速找到合适的表情包。不再需要记住具体的文件名或标签，就能轻松找到想要的表情！
+
+Mememeow 是一个基于自然语言的表情包检索工具。它能让你通过描述想要的场景，快速找到合适的表情包。不再需要记住具体的文件名或标签，就能轻松找到想要的表情！
 
 <a id="-screenshots"></a>
 ## 📸 Screenshots
@@ -88,8 +90,8 @@ VVQuest 是一个基于自然语言的表情包检索工具。它能让你通过
 
 1. 克隆仓库
 ```bash
-git clone https://github.com/DanielZhangyc/VVQuest.git
-cd VVQuest
+git clone https://github.com/MemeMeow-Studio/MemeMeow.git
+cd MemeMeow
 ```
 
 2. 安装依赖
@@ -140,7 +142,7 @@ python -m streamlit run app.py
 4. 等待生成完成后点击 `下载资源包`
 
 > [!TIP]
-> 你可以在 [Issues](https://github.com/DanielZhangyc/VVQuest/issues) 中分享你的资源包，或者查看其他用户分享的资源包。
+> 你可以在 [Issues](https://github.com/MemeMeow-Studio/MemeMeow/issues) 中分享你的资源包，或者查看其他用户分享的资源包。
 
 ### 导入资源包 
 在主界面，点击管理资源包，点击导入资源包，选择资源包，点击导入。
@@ -148,7 +150,7 @@ python -m streamlit run app.py
 > 导入资源包后，需要重新生成缓存。
 
 > [!CAUTION]
-> 新版本查找图片不再从config读取。为了从旧版本迁移，请在label images选择你的图片文件夹，选择导出资源包，然后再导入VVQuest。
+> 新版本查找图片不再从config读取。为了从旧版本迁移，请在label images选择你的图片文件夹，选择导出资源包，然后再导入Mememeow。
 
 
 
@@ -179,7 +181,7 @@ python -m streamlit run app.py
 <a id="-related-applications"></a>
 ## 📦 Related Applications
 
-VVQuest 相关应用:
+Mememeow 相关应用:
 | 应用 | 作者   | GitHub | 链接 |
 | --- | --- | --- | --- |
 | VVQuest网页端 |  | [VVQuest](https://github.com/DanielZhangyc/VVQuest) | [链接](https://zvv.quest) |
@@ -189,7 +191,7 @@ VVQuest 相关应用:
 
 
 > [!TIP]
-> 如果你想添加你的应用，请提交 [PR](https://github.com/DanielZhangyc/VVQuest/pulls) 或 [Issue](https://github.com/DanielZhangyc/VVQuest/issues)
+> 如果你想添加你的应用，请提交 [PR](https://github.com/MemeMeow-Studio/MemeMeow/pulls) 或 [Issue](https://github.com/MemeMeow-Studio/MemeMeow/issues)
 
 ## 📄 License
 
@@ -197,6 +199,6 @@ VVQuest 相关应用:
 
 ## ⭐ Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=DanielZhangyc/VVQuest&type=Date)](https://star-history.com/#DanielZhangyc/VVQuest&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=MemeMeow-Studio/MemeMeow&type=Date)](https://star-history.com/#MemeMeow-Studio/MemeMeow&Date)
 
 ---
