@@ -8,6 +8,7 @@ import numpy as np
 
 from config.settings import Config, ResourcePackConfig
 from services.utils import verify_folder, get_file_hash
+from base import *
 
 class ResourcePackManager:
     """资源包管理器，负责加载、解析和缓存资源包"""
@@ -30,26 +31,7 @@ class ResourcePackManager:
         """加载所有资源包信息"""
         # 清空当前资源包信息
         self.available_packs = {}
-        
-        # 加载默认资源包（data/images目录）
-        default_pack = self.config.resource_packs.get("default_pack", {})
-        if default_pack:
-            self.available_packs["default_pack"] = {
-                "name": "默认资源包",
-                "version": "1.0.0",
-                "author": "System",
-                "description": "系统默认资源包",
-                "path": default_pack.path if hasattr(default_pack, "path") and default_pack.path else "data/images",
-                "type": default_pack.type if hasattr(default_pack, "type") and default_pack.type else "vv",
-                "cache_file": default_pack.cache_file if hasattr(default_pack, "cache_file") and default_pack.cache_file else "data/embeddings.pkl",
-                "enabled": default_pack.enabled if hasattr(default_pack, "enabled") else True,
-                "is_default": True,
-                "cover": None
-            }
-            
-            if self.available_packs["default_pack"]["enabled"]:
-                self.enabled_packs["default_pack"] = self.available_packs["default_pack"]
-        
+
         # 遍历resource_packs目录，加载所有资源包
         if os.path.exists(self.resource_packs_dir):
             for item in os.listdir(self.resource_packs_dir):
@@ -78,29 +60,26 @@ class ResourcePackManager:
                             
                             # 构建资源包信息
                             pack_id = f"pack_{item}"
-                            # 创建model_cache目录
-                            model_cache_dir = os.path.join(pack_dir, "model_cache")
-                            verify_folder(model_cache_dir)
-                            cache_file = os.path.join(model_cache_dir, "embeddings.pkl")
 
                             self.available_packs[pack_id] = {
                                 "name": manifest.get("name", item),
                                 "version": manifest.get("version", "1.0.0"),
                                 "author": manifest.get("author", "Unknown"),
                                 "description": manifest.get("description", ""),
-                                "path": os.path.join(pack_dir, "images"),
+                                "path": pack_dir,
                                 "type": "vv",  # 默认类型
-                                "cache_file": cache_file,
+                                "cache_file": self.get_pack_cache_file(pack_id),
                                 "enabled": resource_config.enabled,  # 默认不启用
                                 "is_default": False,
                                 "cover": cover_path,
                                 "manifest": manifest,
-                                "pack_dir": pack_dir
+                                "pack_dir": pack_dir,
+                                "url": manifest.get("url", "")
                             }
                             if resource_config.enabled:
                                 self.enabled_packs[pack_id] = self.available_packs[pack_id]
                         except Exception as e:
-                            print(f"加载资源包 {item} 失败: {str(e)}")
+                            logger.error(f"加载资源包 {item} 失败: {e}")
     
     def _validate_resource_pack(self, pack_dir: str, manifest: Dict) -> bool:
         """验证资源包是否有效"""
@@ -110,24 +89,24 @@ class ResourcePackManager:
             return False
             
         # 检查images目录是否存在
-        images_dir = os.path.join(pack_dir, "images")
-        if not os.path.exists(images_dir) or not os.path.isdir(images_dir):
-            print(f"资源包 {pack_dir} 缺少images目录")
-            return False
-            
-        # 检查images目录是否有图片
-        has_images = False
-        for root, _, files in os.walk(images_dir):
-            for file in files:
-                if file.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
-                    has_images = True
-                    break
-            if has_images:
-                break
-                
-        if not has_images:
-            print(f"资源包 {pack_dir} 的images目录中没有图片")
-            return False
+        # images_dir = os.path.join(pack_dir, "images")
+        # if not os.path.exists(images_dir) or not os.path.isdir(images_dir):
+        #     print(f"资源包 {pack_dir} 缺少images目录")
+        #     return False
+        #
+        # # 检查images目录是否有图片
+        # has_images = False
+        # for root, _, files in os.walk(images_dir):
+        #     for file in files:
+        #         if file.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+        #             has_images = True
+        #             break
+        #     if has_images:
+        #         break
+        #
+        # if not has_images:
+        #     print(f"资源包 {pack_dir} 的images目录中没有图片")
+        #     return False
             
         return True
     
@@ -208,23 +187,11 @@ class ResourcePackManager:
         
         return default_cover_path
     
-    def get_all_image_dirs(self) -> List[str]:
-        """获取所有启用的资源包的图片目录"""
-        image_dirs = []
-        for pack_id, pack_info in self.enabled_packs.items():
-            path = pack_info["path"]
-            if not os.path.isabs(path):
-                path = os.path.join(self.config.base_dir, path)
-            image_dirs.append(path)
-        return image_dirs
-    
     def get_cache_files(self) -> Dict[str, str]:
         """获取所有启用的资源包的缓存文件路径"""
         cache_files = {}
         for pack_id, pack_info in self.enabled_packs.items():
             cache_file = pack_info["cache_file"]
-            if not os.path.isabs(cache_file):
-                cache_file = os.path.join(self.config.base_dir, cache_file)
             cache_files[pack_id] = cache_file
         return cache_files
     
@@ -238,15 +205,15 @@ class ResourcePackManager:
         cache_file = pack_info["cache_file"]
         
         # 使用传入的模型名称，如果没有则使用配置中的默认模型
-        if model_name is None and self.config.models.default_model:
-            model_name = self.config.models.default_model
+        # if model_name is None and self.config.models.default_model:
+        #     model_name = self.config.models.default_model
             
-        if model_name:
-            cache_file = cache_file.replace('.pkl', f'_{model_name}.pkl')
+        # if model_name:
+        #     cache_file = cache_file.replace('.pkl', f'_{model_name}.pkl')
             
         # 确保路径是绝对路径
-        if not os.path.isabs(cache_file):
-            cache_file = os.path.join(self.config.base_dir, cache_file)
+        # if not os.path.isabs(cache_file):
+        #     cache_file = os.path.join(self.config.base_dir, cache_file)
             
         # 打印调试信息
         exists = os.path.exists(cache_file)
@@ -256,21 +223,6 @@ class ResourcePackManager:
         
     def get_pack_cache_file(self, pack_id: str, model_name: Optional[str] = None) -> Optional[str]:
         """获取指定资源包的缓存文件路径"""
-        if pack_id not in self.available_packs:
-            return None
-            
-        pack_info = self.available_packs[pack_id]
-        cache_file = pack_info["cache_file"]
-        
-        # 使用传入的模型名称，如果没有则使用配置中的默认模型
-        if model_name is None and self.config.models.default_model:
-            model_name = self.config.models.default_model
-            
-        if model_name:
-            cache_file = cache_file.replace('.pkl', f'_{model_name}.pkl')
-            
-        # 确保路径是绝对路径
-        if not os.path.isabs(cache_file):
-            cache_file = os.path.join(self.config.base_dir, cache_file)
-            
-        return cache_file 
+        fp = os.path.join(Config().pack_embedding_cache_folder_path, f"{pack_id}.pkl")
+        verify_folder(fp)
+        return fp

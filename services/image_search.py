@@ -21,13 +21,15 @@ class ImageSearch:
         self.embedding_service = EmbeddingService()
         self.embedding_service.set_mode(mode, model_name)
         self.resource_pack_manager = ResourcePackManager()
-        self.llm_enhance = LLMEnhance()
+        try:
+            self.llm_enhance = LLMEnhance()
+        except:
+            self.llm_enhance = None
         self.image_data = None
         self._try_load_cache()
 
     def __reload_class_cache(self):
         self.embedding_service = EmbeddingService()
-        self.resource_pack_manager = ResourcePackManager()
 
     def _try_load_cache(self) -> None:
         self.__reload_class_cache()
@@ -50,26 +52,10 @@ class ImageSearch:
                     valid_embeddings = []
                     for item in cached_data:
                         # 获取文件路径
-                        if 'filepath' in item:
-                            full_path = item['filepath']
-                        else:
-                            # 使用资源包的路径
-                            pack_info = self.resource_pack_manager.get_enabled_packs().get(pack_id)
-                            if not pack_info:
-                                continue
-                                
-                            pack_path = pack_info["path"]
-                            if not os.path.isabs(pack_path):
-                                pack_path = os.path.join(Config().base_dir, pack_path)
-                                
-                            full_path = os.path.join(pack_path, item['filename'])
-                            # 添加filepath字段
-                            item['filepath'] = full_path
-
-                        if os.path.exists(full_path):
-                            # 添加资源包ID
+                        if 'pack_id' not in item:
                             item['pack_id'] = pack_id
-                            valid_embeddings.append(item)
+                        valid_embeddings.append(item)
+
 
                     if valid_embeddings:
                         all_embeddings.extend(valid_embeddings)
@@ -84,31 +70,6 @@ class ImageSearch:
             self.image_data = all_embeddings
         else:
             self.image_data = None
-
-    def _get_cache_file(self, pack_id: str = "default_pack") -> str:
-        """获取指定资源包的缓存文件路径"""
-        # 使用ResourcePackManager的方法获取缓存文件路径，传递当前模型名称
-        cache_file = self.resource_pack_manager.get_pack_cache_file(pack_id, self.embedding_service.selected_model)
-        if cache_file:
-            return cache_file
-            
-        # 如果ResourcePackManager没有返回路径，使用旧的逻辑作为后备
-        pack_info = self.resource_pack_manager.get_available_packs().get(pack_id)
-        if not pack_info:
-            # 使用默认缓存文件
-            if self.embedding_service.selected_model:
-                return Config().get_abs_cache_file().replace('.pkl', f'_{self.embedding_service.selected_model}.pkl')
-            return Config().get_abs_cache_file()
-            
-        cache_file = pack_info["cache_file"]
-        if not os.path.isabs(cache_file):
-            cache_file = os.path.join(Config().base_dir, cache_file)
-            
-        # 添加模型名称
-        if self.embedding_service.selected_model:
-            cache_file = cache_file.replace('.pkl', f'_{self.embedding_service.selected_model}.pkl')
-            
-        return cache_file
 
     def set_mode(self, mode: str, model_name: Optional[str] = None) -> None:
         """切换搜索模式和模型"""
@@ -166,7 +127,7 @@ class ImageSearch:
                 self._generate_pack_cache(pack_id, pack_info, progress_bar)
                 success_count += 1
             except Exception as e:
-                print(f"生成资源包 {pack_info['name']} 的缓存失败: {str(e)}")
+                print(f"生成资源包 {pack_info['name']} 的缓存失败: {e}")
                 failed_packs.append(f"{pack_info['name']}: {str(e)}")
             
         # 重新加载所有缓存
@@ -182,16 +143,9 @@ class ImageSearch:
         self.__reload_class_cache()
         """为指定的资源包生成缓存"""
         img_dir = pack_info["path"]
-        if not os.path.isabs(img_dir):
-            img_dir = os.path.join(Config().base_dir, img_dir)
             
-        if not os.path.exists(img_dir):
-            os.makedirs(img_dir, exist_ok=True)
-            
-        cache_file = self._get_cache_file(pack_id)
-        
-        # 确保缓存目录存在
-        os.makedirs(os.path.dirname(cache_file), exist_ok=True)
+        cache_file = self.resource_pack_manager.get_pack_cache_file(pack_id)
+        verify_folder(cache_file)
         
         # 尝试加载现有缓存
         existing_embeddings = []
@@ -208,31 +162,25 @@ class ImageSearch:
                         if isinstance(item, dict) and 'filename' in item and 'embedding' in item:
                             valid_embeddings.append(item)
                         else:
-                            print(f"警告: 缓存文件中发现无效的数据项: {type(item)}")
+                            logger.warning(f"警告: 缓存文件中发现无效的数据项: {type(item)}")
                     existing_embeddings = valid_embeddings
                 else:
-                    print(f"警告: 缓存文件格式不正确，期望列表但得到 {type(loaded_data)}")
+                    logger.warning(f"警告: 缓存文件格式不正确，期望列表但得到 {type(loaded_data)}")
             except (pickle.UnpicklingError, EOFError) as e:
-                print(f"加载缓存文件 {cache_file} 失败: {str(e)}")
+                logger.error(f"加载缓存文件 {cache_file} 失败: {str(e)}")
                 existing_embeddings = []
                 
         # 确保所有缓存数据都有filepath字段
         generated_files = []
         for item in existing_embeddings:
-            if 'filepath' not in item:
-                item['filepath'] = os.path.join(img_dir, item['filename'])
-            generated_files.append(item['filepath'])
+           generated_files.append(item['filepath'])
 
         # 获取所有图片文件路径
-        def get_all_file_paths(folder_path):
-            file_paths = []
-            for root, _, files in os.walk(folder_path):
-                for filename in files:
-                    file_path = os.path.join(root, filename)
-                    file_paths.append(file_path)
-            return file_paths
+        all_files = []
+        for k, v in pack_info['manifest']['contents']['images']['files'].items():
+            all_files.append(os.path.join(pack_info['pack_dir'], v['filepath']))
 
-        all_files = get_all_file_paths(img_dir)
+
         image_files = [
             f for f in all_files
             if f.lower().endswith(('.png', '.jpg', '.jpeg', '.gif'))
@@ -263,17 +211,19 @@ class ImageSearch:
         total_files = len(new_image_files)
         for index, filepath in enumerate(new_image_files):
             try:
-                if not os.path.isabs(filepath):
-                    filepath = os.path.join(Config().base_dir, filepath)
+                # if not os.path.isabs(filepath):
+                #     filepath = os.path.join(Config().base_dir, filepath)
                     
                 filename = os.path.splitext(os.path.basename(filepath))[0]
                 full_filename = None
                 
                 for ext in ENDWITH_IMAGE:
-                    if os.path.exists(os.path.join(os.path.dirname(filepath), filename + ext)):
-                        full_filename = filename + ext
-                        break
-                        
+                    # if os.path.exists(os.path.join(os.path.dirname(filepath), filename + ext)):
+                    #     full_filename = filename + ext
+                    #     break
+                    pass
+                full_filename = filepath
+
                 if full_filename:
                     raw_embedding_name = filename
                     if replace_patterns_regex is not None:
@@ -365,6 +315,8 @@ class ImageSearch:
                use_llm: bool = False) -> List[str]:
         self.__reload_class_cache()
         if use_llm:
+            if self.llm_enhance is None:
+                self.llm_enhance = LLMEnhance()
             query = self.llm_enhance.search(query)
 
         """语义搜索最匹配的图片"""
@@ -389,15 +341,16 @@ class ImageSearch:
                 pack_path = pack_info["path"]
                 if not os.path.isabs(pack_path):
                     pack_path = os.path.join(Config().base_dir, pack_path)
-                    
+
                 img['filepath'] = os.path.join(pack_path, img["filename"])
                 
-            if os.path.exists(img['filepath']):
+            # if os.path.exists(img['filepath']):
                 # similarity = self._cosine_similarity(query_embedding, img['embedding'])
-                similarities.append(({
-                                         'path': img['filepath'],
-                                         'embedding_name': img['embedding_name'], },
-                                     self._cosine_similarity(query_embedding, img["embedding"])))
+            similarities.append(({
+                                     'path': img['filepath'],
+                                     'embedding_name': img['embedding_name'],
+                                 "obj": img},
+                                 self._cosine_similarity(query_embedding, img["embedding"])))
 
         if not similarities:
             return []
@@ -411,9 +364,22 @@ class ImageSearch:
             if count >= top_k * 5:
                 break
             if i[0]['path'] not in exists_imgs_path:
+                if not os.path.exists(i[0]['path']):
+                    # 联网检查
+                    url = self.resource_pack_manager.enabled_packs[i[0]['obj']['pack_id']]['url']
+                    if url:
+                        rel_path = re.sub(r'^.*?resource_packs\\[^\\]+\\', '', i[0]['path'])
+                        if not download_file(os.path.join(url, rel_path), i[0]['path']):
+                            continue
+                    else:
+                        logger.error(f"图片不存在: {i[0]['path']}")
+                        continue
                 return_list.append(i[0])
                 exists_imgs_path.append(i[0]['path'])
                 count += 1
+            # 联网下载不存在的图片
+
+
 
         # 随机化输出 去除重复图片
 
@@ -435,13 +401,18 @@ class ImageSearch:
             else:
                 return_list_2.append(i['path'])
 
+
+
+
         return return_list_2
         # # 按相似度排序
         # similarities.sort(reverse=True)
         #
         # # 返回前top_k个结果
         # return [item[1] for item in similarities[:top_k]]
-        
+
+
+
     def reload_resource_packs(self) -> None:
         """重新加载资源包"""
         self.resource_pack_manager = ResourcePackManager()

@@ -36,5 +36,5 @@ def delete_all_files_in_folder(folder_path):
 
 verify_folder(os.path.join(Config().temp_dir))
 delete_all_files_in_folder(os.path.join(Config().temp_dir))
-pg = st.navigation([st.Page("pages/VVQuest.py"), st.Page("pages/label_images.py"), st.Page("pages/upload_images.py")])
+pg = st.navigation([st.Page("pages/Mememeow.py"), st.Page("pages/label_images.py"), st.Page("pages/upload_images.py")])
 pg.run()

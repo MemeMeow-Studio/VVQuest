@@ -194,11 +194,6 @@ class Config(BaseConfig):
 
 
     def __init__(self, keep_tracked = False):
-        if TRACE_MODE is not None:
-            frame = inspect.currentframe().f_back
-            filename = frame.f_code.co_filename
-            lineno = frame.f_lineno
-            logger.trace(f"Config 类在 {frame.f_code.co_name} 被实例化。")
         data = config_cache.get_config()
         if not data:
             if TRACE_MODE:
@@ -266,6 +261,12 @@ class Config(BaseConfig):
     def get_label_images_cache_file(self) -> str:
         """获取缓存文件的绝对路径"""
         return os.path.join(self.base_dir,self.paths.label_images_cache_file)
+
+    @cached_property
+    def pack_embedding_cache_folder_path(self):
+        p=os.path.join(self.base_dir, 'data', 'pack_embedding_cache')
+        verify_folder(p)
+        return p
 
     @cached_property
     def temp_dir(self) -> str:

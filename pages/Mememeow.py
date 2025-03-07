@@ -9,8 +9,8 @@ from services.resource_pack import ResourcePackService
 
 # 页面配置
 st.set_page_config(
-    page_title="VVQuest",
-    page_icon="🌐",
+    page_title="Mememeow",
+    page_icon="🐱",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -34,12 +34,12 @@ def save_config_yaml(api_key: str, base_url: str) -> None:
 SEARCH_PLACEHOLDERS = [
     "如何看待Deepseek？",
     "如何看待六代机？",
-    "如何看待VVQuest？",
+    "如何看待Mememeow？",
     "如何看待张维为？",
     "如何看待...？",
 ]
 
-st.title("VVQuest")
+st.title("Mememeow")
 
 # 初始化session state
 if 'placeholder' not in st.session_state:
@@ -206,7 +206,7 @@ def on_reload_resource_packs():
 
 # 侧边栏搜索区域
 with st.sidebar:
-    st.title("🔍 VV智能回应")
+    st.title("🐱 MemeMeow")
     
     # 模式选择
     st.selectbox(
@@ -459,10 +459,10 @@ st.markdown(
     
     🌟 关注我 | Follow Me 🌟
     
-    👨‍💻 [GitHub](https://github.com/DanielZhangyc) · 
+    👨‍💻 [GitHub](https://github.com/MemeMeow-Studio) · 
     📺 [哔哩哔哩](https://space.bilibili.com/165404794) · 
     📝 [博客](https://www.xy0v0.top/)
     </div>
     """, 
     unsafe_allow_html=True
-) 
+)

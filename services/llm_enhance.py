@@ -27,8 +27,11 @@ class LLMEnhance:
         logger.debug(f"result: {result.content}")
         return result.content
 
+    def judge_possible_memes(self, possible_memes:t.List[str]):
+        pass
+
 
 if __name__ == '__main__':
     llm = LLMEnhance()
-    llm.search("如何评价母鸡卡第八集")
+    llm.search("如何评价《这就是中国》")
 

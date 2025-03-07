@@ -9,5 +9,6 @@ config/config.yaml
 cache/
 export/*
 resource_packs/*
+!resource_packs/default_pack/
 temp/
 Logs/
